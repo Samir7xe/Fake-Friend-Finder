@@ -864,29 +864,14 @@ $("logout")?.addEventListener("click", async () => {
 
 /* SOUND AND MUSIC */
 
-$("soundToggle")?.addEventListener("click", () => {
+$("soundToggle")?.addEventListener("change", () => {
   const button = $("soundToggle");
-  const enabled = button.getAttribute("aria-pressed") !== "true";
-
-  button.setAttribute("aria-pressed", String(enabled));
-  button.textContent = enabled ? "🔊 Sound On" : "🔇 Sound Off";
-});
-
-$("musicFile")?.addEventListener("change", event => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-
-  if (state.musicUrl) URL.revokeObjectURL(state.musicUrl);
-
-  state.musicUrl = URL.createObjectURL(file);
-  $("bgMusic").src = state.musicUrl;
-  $("bgMusic").load();
+  button.setAttribute("aria-pressed", String(button.checked));
 });
 
 $("musicToggle")?.addEventListener("click", async () => {
   const music = $("bgMusic");
-
-  if (!music.src) return alert("আগে একটি মিউজিক ফাইল বেছে নিন।");
+  if (!music) return;
 
   if (music.paused) {
     try {
