@@ -1,3 +1,4 @@
+
 "use strict";
 
 const $ = id => document.getElementById(id);
@@ -22,27 +23,28 @@ async function api(url, options = {}) {
   });
 
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
+
+  if (!response.ok) {
+    throw new Error(data.error || `Error ${response.status}`);
+  }
+
   return data;
 }
 
 function esc(value) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;",
-    '"': "&quot;", "'": "&#39;"
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
   })[c]);
-}
-
-function show(id) {
-  document.querySelectorAll(".view").forEach(el => {
-    el.classList.toggle("hidden", el.id !== id);
-  });
-  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function msg(id, text, error = false) {
   const el = $(id);
   if (!el) return;
+
   el.textContent = text;
   el.classList.remove("hidden");
   el.style.color = error ? "#d93050" : "";
@@ -50,6 +52,14 @@ function msg(id, text, error = false) {
 
 function fail(error) {
   return error?.message || "কাজটি করা যায়নি। আবার চেষ্টা করুন।";
+}
+
+function show(id) {
+  document.querySelectorAll(".view").forEach(el => {
+    el.classList.toggle("hidden", el.id !== id);
+  });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 /* NAVIGATION */
@@ -66,14 +76,14 @@ $("websiteModeBtn")?.addEventListener("click", async () => {
 $("createBtn")?.addEventListener("click", () => show("create"));
 $("howBtn")?.addEventListener("click", () => show("how"));
 
-$("profileBubble")?.addEventListener("click", () => {
+$("profileBubble")?.addEventListener("click", async () => {
   show("profile");
-  loadProfile();
+  await loadProfile();
 });
 
 $("closeProfile")?.addEventListener("click", () => show("home"));
 
-/* CUSTOM QUIZ CREATION */
+/* CUSTOM QUIZ */
 
 $("build")?.addEventListener("click", () => {
   if (!$("creatorName").value.trim()) {
@@ -83,6 +93,12 @@ $("build")?.addEventListener("click", () => {
   }
 
   const count = Number($("count").value);
+
+  if (!Number.isInteger(count) || count < 20 || count > 30) {
+    alert("২০ থেকে ৩০টি প্রশ্ন বেছে নাও।");
+    return;
+  }
+
   state.customQuestions = Array.from({ length: count }, () => ({
     prompt: "",
     options: ["", "", "", ""],
@@ -95,31 +111,30 @@ $("build")?.addEventListener("click", () => {
 
 function renderEditor() {
   const container = $("questionEditor");
+  if (!container) return;
 
   container.innerHTML = state.customQuestions.map((q, i) => `
     <div class="question-card">
       <h3>প্রশ্ন ${i + 1}</h3>
 
-      <label>প্রশ্ন লিখো
+      <label>প্রশ্ন
         <textarea data-prompt="${i}" maxlength="300">${esc(q.prompt)}</textarea>
       </label>
 
-      <div>
-        ${q.options.map((option, j) => `
-          <label>অপশন ${j + 1}
-            <input data-option="${i}:${j}" maxlength="120"
-              value="${esc(option)}" placeholder="অপশন লিখো">
-          </label>
-        `).join("")}
-      </div>
+      ${q.options.map((option, j) => `
+        <label>অপশন ${j + 1}
+          <input data-option="${i}:${j}"
+            maxlength="120" value="${esc(option)}">
+        </label>
+      `).join("")}
 
-      <button type="button" class="glow pale" data-add-option="${i}">
+      <button type="button" data-add-option="${i}">
         ＋ অপশন যোগ
       </button>
 
       <label>সঠিক উত্তর
         <select data-correct="${i}">
-          <option value="">সঠিক উত্তর বেছে নাও</option>
+          <option value="">বেছে নাও</option>
           ${q.options.filter(x => x.trim()).map(option => `
             <option value="${esc(option)}"
               ${q.correctAnswer === option ? "selected" : ""}>
@@ -141,17 +156,23 @@ function renderEditor() {
     el.addEventListener("input", () => {
       const [qi, oi] = el.dataset.option.split(":").map(Number);
       const q = state.customQuestions[qi];
-      const old = q.options[oi];
+
       q.options[oi] = el.value;
 
-      if (q.correctAnswer === old) q.correctAnswer = "";
+      if (q.correctAnswer !== el.value &&
+          !q.options.includes(q.correctAnswer)) {
+        q.correctAnswer = "";
+      }
 
       const select = container.querySelector(`[data-correct="${qi}"]`);
-      select.innerHTML = `<option value="">সঠিক উত্তর বেছে নাও</option>` +
+      const previous = q.correctAnswer;
+
+      select.innerHTML = `<option value="">বেছে নাও</option>` +
         q.options.filter(x => x.trim()).map(option => `
           <option value="${esc(option)}">${esc(option)}</option>
         `).join("");
-      select.value = q.correctAnswer;
+
+      select.value = previous;
     });
   });
 
@@ -164,7 +185,12 @@ function renderEditor() {
   container.querySelectorAll("[data-add-option]").forEach(button => {
     button.addEventListener("click", () => {
       const q = state.customQuestions[+button.dataset.addOption];
-      if (q.options.length >= 12) return alert("সর্বোচ্চ ১২টি অপশন রাখা যাবে।");
+
+      if (q.options.length >= 12) {
+        alert("সর্বোচ্চ ১২টি অপশন রাখা যাবে।");
+        return;
+      }
+
       q.options.push("");
       renderEditor();
     });
@@ -220,13 +246,22 @@ $("saveQuiz")?.addEventListener("click", async () => {
 
     const box = $("shareResult");
     box.classList.remove("hidden");
-    box.innerHTML = `
-      <p>🎉 তোমার কুইজ তৈরি হয়েছে!</p>
-      <p><a href="${esc(result.shareUrl)}">${esc(result.shareUrl)}</a></p>
-      <button type="button" id="copyQuizLink" class="glow">লিংক কপি করো</button>
-    `;
+    box.textContent = "";
 
-    $("copyQuizLink").addEventListener("click", async () => {
+    const p = document.createElement("p");
+    p.textContent = "🎉 কুইজ তৈরি হয়েছে!";
+    box.appendChild(p);
+
+    const link = document.createElement("a");
+    link.href = result.shareUrl;
+    link.textContent = result.shareUrl;
+    box.appendChild(link);
+
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.textContent = "লিংক কপি করো";
+
+    copy.addEventListener("click", async () => {
       try {
         await navigator.clipboard.writeText(result.shareUrl);
         alert("লিংক কপি হয়েছে!");
@@ -234,6 +269,8 @@ $("saveQuiz")?.addEventListener("click", async () => {
         prompt("লিংক কপি করো:", result.shareUrl);
       }
     });
+
+    box.appendChild(copy);
   } catch (error) {
     alert(fail(error));
   } finally {
@@ -241,16 +278,17 @@ $("saveQuiz")?.addEventListener("click", async () => {
   }
 });
 
-/* PLAY A SHARED QUIZ */
+/* PLAY SHARED QUIZ */
 
 async function loadQuiz(id) {
   try {
     const quiz = await api(`/api/quizzes/${encodeURIComponent(id)}`);
-    $("playTitle").textContent = `${quiz.creatorName}-এর কুইজ 💙`;
+
+    $("playTitle").textContent = `${quiz.creatorName}-এর কুইজ`;
 
     $("pickList").innerHTML = quiz.questions.map(q => `
       <label class="question-card">
-        <input type="checkbox" data-pick value="${q.id}">
+        <input type="checkbox" data-pick value="${esc(q.id)}">
         ${esc(q.prompt)}
       </label>
     `).join("");
@@ -268,20 +306,26 @@ async function loadQuiz(id) {
 
 $("startPlay")?.addEventListener("click", async () => {
   const playerName = $("playerName").value.trim();
-  const questionIds = [...document.querySelectorAll("[data-pick]:checked")]
-    .map(el => Number(el.value));
+  const questionIds = [
+    ...document.querySelectorAll("[data-pick]:checked")
+  ].map(el => Number(el.value));
 
   if (!playerName) return alert("তোমার নাম লিখো।");
-  if (questionIds.length !== 10) return alert("ঠিক ১০টি প্রশ্ন বেছে নাও।");
+  if (questionIds.length !== 10) {
+    return alert("ঠিক ১০টি প্রশ্ন বেছে নাও।");
+  }
 
   const match = location.pathname.match(/^\/play\/([^/]+)$/);
   if (!match) return alert("কুইজের লিংক সঠিক নয়।");
 
   try {
-    const result = await api(`/api/quizzes/${encodeURIComponent(match[1])}/start`, {
-      method: "POST",
-      body: JSON.stringify({ playerName, questionIds })
-    });
+    const result = await api(
+      `/api/quizzes/${encodeURIComponent(match[1])}/start`,
+      {
+        method: "POST",
+        body: JSON.stringify({ playerName, questionIds })
+      }
+    );
 
     state.sessionId = result.sessionId;
     state.playQuestions = result.questions;
@@ -294,12 +338,14 @@ $("startPlay")?.addEventListener("click", async () => {
         <h3>${i + 1}. ${esc(q.prompt)}</h3>
         ${q.options.map(option => `
           <label>
-            <input type="radio" name="answer-${q.id}" value="${esc(option)}">
+            <input type="radio" name="answer-${esc(q.id)}"
+              value="${esc(option)}">
             ${esc(option)}
           </label>
         `).join("")}
       </div>
-    `).join("") + `<button type="button" id="submitPlay" class="glow">উত্তর জমা দাও</button>`;
+    `).join("") +
+      `<button type="button" id="submitPlay">উত্তর জমা দাও</button>`;
 
     $("submitPlay").addEventListener("click", submitPlay);
   } catch (error) {
@@ -311,19 +357,25 @@ async function submitPlay() {
   const answers = {};
 
   for (const q of state.playQuestions) {
-    const selected = document.querySelector(`input[name="answer-${q.id}"]:checked`);
+    const selected = document.querySelector(
+      `input[name="answer-${CSS.escape(String(q.id))}"]:checked`
+    );
+
     if (!selected) return alert("সব প্রশ্নের উত্তর দাও।");
     answers[q.id] = selected.value;
   }
 
   try {
-    const result = await api(`/api/sessions/${encodeURIComponent(state.sessionId)}/submit`, {
-      method: "POST",
-      body: JSON.stringify({
-        playerName: $("playerName").value.trim(),
-        answers
-      })
-    });
+    const result = await api(
+      `/api/sessions/${encodeURIComponent(state.sessionId)}/submit`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          playerName: $("playerName").value.trim(),
+          answers
+        })
+      }
+    );
 
     $("score").textContent = `তোমার স্কোর: ${result.score}/${result.total}`;
     $("submitPlay").disabled = true;
@@ -336,10 +388,13 @@ async function submitPlay() {
 
 async function loadWebsiteQuestions() {
   const container = $("websiteQuestionList");
+  if (!container) return;
+
   container.textContent = "প্রশ্ন লোড হচ্ছে…";
 
   try {
-    state.websiteQuestions = await api("/api/website-questions");
+    const data = await api("/api/website-questions");
+    state.websiteQuestions = Array.isArray(data) ? data : [];
 
     if (!state.websiteQuestions.length) {
       container.textContent = "এখনও কোনো প্রশ্ন যোগ করা হয়নি।";
@@ -351,7 +406,8 @@ async function loadWebsiteQuestions() {
         <h3>${i + 1}. ${esc(q.question)}</h3>
         ${(Array.isArray(q.options) ? q.options : []).map(option => `
           <label>
-            <input type="radio" name="web-${q.id}" value="${esc(option)}">
+            <input type="radio" name="web-${esc(q.id)}"
+              value="${esc(option)}">
             ${esc(option)}
           </label>
         `).join("")}
@@ -364,13 +420,19 @@ async function loadWebsiteQuestions() {
 
 $("submitWebsiteAnswers")?.addEventListener("click", async () => {
   const playerName = $("websitePlayerName").value.trim();
+
   if (!playerName) return alert("তোমার নাম লিখো।");
-  if (!state.websiteQuestions.length) return alert("প্রশ্ন উপলভ্য নেই।");
+  if (!state.websiteQuestions.length) {
+    return alert("প্রশ্ন উপলভ্য নেই।");
+  }
 
   const answers = {};
 
   for (const q of state.websiteQuestions) {
-    const selected = document.querySelector(`input[name="web-${q.id}"]:checked`);
+    const selected = document.querySelector(
+      `input[name="web-${CSS.escape(String(q.id))}"]:checked`
+    );
+
     if (!selected) return alert("সব প্রশ্নের উত্তর দাও।");
     answers[q.id] = selected.value;
   }
@@ -380,6 +442,7 @@ $("submitWebsiteAnswers")?.addEventListener("click", async () => {
       method: "POST",
       body: JSON.stringify({ playerName, answers })
     });
+
     msg("websiteScore", `তোমার স্কোর: ${result.score}/${result.total}`);
   } catch (error) {
     msg("websiteScore", fail(error), true);
@@ -389,13 +452,19 @@ $("submitWebsiteAnswers")?.addEventListener("click", async () => {
 /* PUBLIC QUESTIONS */
 
 async function loadPublicQuestions() {
+  const container = $("publicQuestionList");
+  if (!container) return;
+
   try {
     const questions = await api("/api/public-questions");
-    $("publicQuestionList").innerHTML = questions.length
-      ? questions.map(q => `<div class="question-card">${esc(q.question)}</div>`).join("")
+
+    container.innerHTML = questions.length
+      ? questions.map(q =>
+          `<div class="question-card">${esc(q.question)}</div>`
+        ).join("")
       : "<p>এখনও কোনো অনুমোদিত প্রশ্ন নেই।</p>";
   } catch (error) {
-    $("publicQuestionList").textContent = fail(error);
+    container.textContent = fail(error);
   }
 }
 
@@ -422,19 +491,27 @@ $("submitPublicQuestion")?.addEventListener("click", async () => {
 async function loadProfile() {
   try {
     const profile = await api("/api/settings");
-    $("profileName").textContent = profile.displayName || "Your Name";
 
-    if (profile.avatar) {
-      $("largeAvatar").innerHTML =
-        `<img src="${esc(profile.avatar)}" alt="Avatar">`;
-    } else {
-      $("largeAvatar").textContent = "✧";
+    if ($("profileName")) {
+      $("profileName").textContent = profile.displayName || "Your Name";
     }
 
-    $("socialLinks").innerHTML = (profile.links || [])
-      .filter(x => x.label && /^https?:\/\//i.test(x.url || ""))
-      .map(x => `<p><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.label)}</a></p>`)
-      .join("") || "<p>এখনও কোনো লিংক নেই।</p>";
+    if ($("largeAvatar")) {
+      if (profile.avatar) {
+        $("largeAvatar").innerHTML =
+          `<img src="${esc(profile.avatar)}" alt="Avatar">`;
+      } else {
+        $("largeAvatar").textContent = "✧";
+      }
+    }
+
+    if ($("socialLinks")) {
+      $("socialLinks").innerHTML = (profile.links || [])
+        .filter(x => x.label && /^https?:\/\//i.test(x.url || ""))
+        .map(x =>
+          `<p><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.label)}</a></p>`
+        ).join("") || "<p>এখনও কোনো লিংক নেই।</p>";
+    }
   } catch (error) {
     console.error(error);
   }
@@ -445,10 +522,11 @@ async function loadProfile() {
 async function checkAdmin() {
   try {
     await api("/api/admin/me");
-    $("adminTools").classList.remove("hidden");
+
+    $("adminTools")?.classList.remove("hidden");
     await loadAdminData();
   } catch {
-    $("adminTools").classList.add("hidden");
+    $("adminTools")?.classList.add("hidden");
   }
 }
 
@@ -458,25 +536,29 @@ $("adminLogin")?.addEventListener("submit", async event => {
   try {
     await api("/creator-room-7f3c/login", {
       method: "POST",
-      body: JSON.stringify({ password: $("adminPassword").value })
+      body: JSON.stringify({
+        password: $("adminPassword").value
+      })
     });
 
     $("adminPassword").value = "";
-    $("adminMessage").textContent = "Login সফল হয়েছে।";
+    msg("adminMessage", "Login সফল হয়েছে।");
     await checkAdmin();
   } catch (error) {
-    $("adminMessage").textContent = fail(error);
+    msg("adminMessage", fail(error), true);
   }
 });
 
 async function loadAdminData() {
   try {
     const profile = await api("/api/settings");
-    $("displayName").value = profile.displayName || "";
-    $("avatarUrl").value = profile.avatar || "";
+
+    if ($("displayName")) $("displayName").value = profile.displayName || "";
+    if ($("avatarUrl")) $("avatarUrl").value = profile.avatar || "";
+
     renderLinks(profile.links || []);
   } catch (error) {
-    $("adminMessage").textContent = fail(error);
+    msg("adminMessage", fail(error), true);
   }
 
   await Promise.all([
@@ -493,7 +575,10 @@ function renderLinks(links) {
     url: x.url || ""
   }));
 
-  $("linkEditor").innerHTML = state.links.map((x, i) => `
+  const container = $("linkEditor");
+  if (!container) return;
+
+  container.innerHTML = state.links.map((x, i) => `
     <div class="question-card">
       <label>Link name
         <input data-link-label="${i}" value="${esc(x.label)}">
@@ -505,15 +590,19 @@ function renderLinks(links) {
     </div>
   `).join("");
 
-  $("linkEditor").querySelectorAll("[data-link-label]").forEach(el => {
-    el.addEventListener("input", () => state.links[+el.dataset.linkLabel].label = el.value);
+  container.querySelectorAll("[data-link-label]").forEach(el => {
+    el.addEventListener("input", () => {
+      state.links[+el.dataset.linkLabel].label = el.value;
+    });
   });
 
-  $("linkEditor").querySelectorAll("[data-link-url]").forEach(el => {
-    el.addEventListener("input", () => state.links[+el.dataset.linkUrl].url = el.value);
+  container.querySelectorAll("[data-link-url]").forEach(el => {
+    el.addEventListener("input", () => {
+      state.links[+el.dataset.linkUrl].url = el.value;
+    });
   });
 
-  $("linkEditor").querySelectorAll("[data-remove-link]").forEach(el => {
+  container.querySelectorAll("[data-remove-link]").forEach(el => {
     el.addEventListener("click", () => {
       state.links.splice(+el.dataset.removeLink, 1);
       renderLinks(state.links);
@@ -522,7 +611,11 @@ function renderLinks(links) {
 }
 
 $("addLink")?.addEventListener("click", () => {
-  if (state.links.length >= 30) return alert("সর্বোচ্চ ৩০টি লিংক রাখা যাবে।");
+  if (state.links.length >= 30) {
+    alert("সর্বোচ্চ ৩০টি লিংক রাখা যাবে।");
+    return;
+  }
+
   state.links.push({ label: "", url: "" });
   renderLinks(state.links);
 });
@@ -547,9 +640,11 @@ $("saveProfile")?.addEventListener("click", async () => {
 
 async function loadAdminQuizzes() {
   const container = $("quizAdmin");
+  if (!container) return;
 
   try {
     const quizzes = await api("/api/admin/quizzes");
+
     container.innerHTML = quizzes.map(q => `
       <div class="question-card">
         <p>${esc(q.creator_name)} — ${q.question_count} প্রশ্ন</p>
@@ -569,8 +664,13 @@ async function loadAdminQuizzes() {
 
 async function loadResults(id) {
   const container = $(`results-${id}`);
+  if (!container) return;
+
   try {
-    const results = await api(`/api/admin/quizzes/${encodeURIComponent(id)}/results`);
+    const results = await api(
+      `/api/admin/quizzes/${encodeURIComponent(id)}/results`
+    );
+
     container.innerHTML = results.map(r =>
       `<p>${esc(r.player_name)}: ${r.score}/${r.total}</p>`
     ).join("") || "<p>কোনো ফলাফল নেই।</p>";
@@ -581,9 +681,11 @@ async function loadResults(id) {
 
 async function loadAdminPublicQuestions() {
   const container = $("adminPublicQuestions");
+  if (!container) return;
 
   try {
     const questions = await api("/api/admin/public-questions");
+
     container.innerHTML = questions.map(q => `
       <div class="question-card">
         <p>${esc(q.question)}</p>
@@ -596,10 +698,14 @@ async function loadAdminPublicQuestions() {
     container.querySelectorAll("[data-review]").forEach(button => {
       button.addEventListener("click", async () => {
         try {
-          await api(`/api/admin/public-questions/${button.dataset.review}`, {
-            method: "PUT",
-            body: JSON.stringify({ status: button.dataset.status })
-          });
+          await api(
+            `/api/admin/public-questions/${button.dataset.review}`,
+            {
+              method: "PUT",
+              body: JSON.stringify({ status: button.dataset.status })
+            }
+          );
+
           await loadAdminPublicQuestions();
           await loadPublicQuestions();
         } catch (error) {
@@ -614,9 +720,11 @@ async function loadAdminPublicQuestions() {
 
 async function loadAdminWebsiteQuestions() {
   const container = $("adminWebsiteQuestions");
+  if (!container) return;
 
   try {
     const questions = await api("/api/website-questions");
+
     container.innerHTML = questions.map(q => `
       <div class="question-card">
         <p>${esc(q.question)}</p>
@@ -630,9 +738,11 @@ async function loadAdminWebsiteQuestions() {
         if (!confirm("এই প্রশ্নটি মুছে ফেলবেন?")) return;
 
         try {
-          await api(`/api/admin/website-questions/${button.dataset.deleteWeb}`, {
-            method: "DELETE"
-          });
+          await api(
+            `/api/admin/website-questions/${button.dataset.deleteWeb}`,
+            { method: "DELETE" }
+          );
+
           await loadAdminWebsiteQuestions();
           await loadWebsiteQuestions();
         } catch (error) {
@@ -645,15 +755,19 @@ async function loadAdminWebsiteQuestions() {
   }
 }
 
-/* ADMIN: ADD WEBSITE QUESTION */
+/* ADD WEBSITE QUESTION */
 
 function renderWebsiteOptions(options = ["", ""]) {
-  $("newWebsiteOptions").innerHTML = `
+  const container = $("newWebsiteOptions");
+  if (!container) return;
+
+  container.innerHTML = `
     ${options.map((option, i) => `
       <label>অপশন ${i + 1}
         <input data-new-option="${i}" value="${esc(option)}" maxlength="120">
       </label>
     `).join("")}
+
     <label>সঠিক উত্তর
       <select id="newCorrect">
         <option value="">সঠিক উত্তর বেছে নাও</option>
@@ -668,18 +782,24 @@ function renderWebsiteOptions(options = ["", ""]) {
 renderWebsiteOptions();
 
 $("addWebsiteQuestion")?.addEventListener("click", () => {
-  const options = [...$("newWebsiteOptions").querySelectorAll("[data-new-option]")]
-    .map(el => el.value);
+  const options = [
+    ...$("newWebsiteOptions").querySelectorAll("[data-new-option]")
+  ].map(el => el.value);
 
-  if (options.length >= 12) return alert("সর্বোচ্চ ১২টি অপশন রাখা যাবে।");
+  if (options.length >= 12) {
+    alert("সর্বোচ্চ ১২টি অপশন রাখা যাবে।");
+    return;
+  }
+
   options.push("");
   renderWebsiteOptions(options);
 });
 
 $("saveWebsiteQuestion")?.addEventListener("click", async () => {
   const question = $("newWebsiteQuestion").value.trim();
-  const options = [...$("newWebsiteOptions").querySelectorAll("[data-new-option]")]
-    .map(el => el.value.trim()).filter(Boolean);
+  const options = [
+    ...$("newWebsiteOptions").querySelectorAll("[data-new-option]")
+  ].map(el => el.value.trim()).filter(Boolean);
   const correctAnswer = $("newCorrect")?.value || "";
 
   if (!question || options.length < 2 ||
@@ -688,7 +808,119 @@ $("saveWebsiteQuestion")?.addEventListener("click", async () => {
     return msg("websiteAdminMessage", "প্রশ্ন, আলাদা অপশন ও সঠিক উত্তর দিন।", true);
   }
 
+  const button = $("saveWebsiteQuestion");
+  button.disabled = true;
+
   try {
     await api("/api/admin/website-questions", {
       method: "POST",
- 
+      body: JSON.stringify({ question, options, correctAnswer })
+    });
+
+    $("newWebsiteQuestion").value = "";
+    renderWebsiteOptions(["", ""]);
+    msg("websiteAdminMessage", "প্রশ্ন সফলভাবে যোগ হয়েছে।");
+
+    await loadAdminWebsiteQuestions();
+    await loadWebsiteQuestions();
+  } catch (error) {
+    msg("websiteAdminMessage", fail(error), true);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+/* WEBSITE ANSWERS ADMIN */
+
+async function loadAdminWebsiteAnswers() {
+  const container = $("websiteAnswersAdmin");
+  if (!container) return;
+
+  try {
+    const answers = await api("/api/admin/website-answers");
+
+    container.innerHTML = answers.map(answer => `
+      <div class="question-card">
+        <p><strong>${esc(answer.player_name)}</strong></p>
+        <p>স্কোর: ${Number(answer.score)}/${Number(answer.total)}</p>
+      </div>
+    `).join("") || "<p>এখনও কোনো উত্তর জমা পড়েনি।</p>";
+  } catch (error) {
+    container.textContent = fail(error);
+  }
+}
+
+/* LOGOUT */
+
+$("logout")?.addEventListener("click", async () => {
+  try {
+    await api("/creator-room-7f3c/logout", { method: "POST" });
+    $("adminTools")?.classList.add("hidden");
+    msg("adminMessage", "লগআউট হয়েছে।");
+  } catch (error) {
+    msg("adminMessage", fail(error), true);
+  }
+});
+
+/* SOUND AND MUSIC */
+
+$("soundToggle")?.addEventListener("click", () => {
+  const button = $("soundToggle");
+  const enabled = button.getAttribute("aria-pressed") !== "true";
+
+  button.setAttribute("aria-pressed", String(enabled));
+  button.textContent = enabled ? "🔊 Sound On" : "🔇 Sound Off";
+});
+
+$("musicFile")?.addEventListener("change", event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (state.musicUrl) URL.revokeObjectURL(state.musicUrl);
+
+  state.musicUrl = URL.createObjectURL(file);
+  $("bgMusic").src = state.musicUrl;
+  $("bgMusic").load();
+});
+
+$("musicToggle")?.addEventListener("click", async () => {
+  const music = $("bgMusic");
+
+  if (!music.src) return alert("আগে একটি মিউজিক ফাইল বেছে নিন।");
+
+  if (music.paused) {
+    try {
+      await music.play();
+      $("musicToggle").textContent = "⏸ Music Pause";
+    } catch {
+      alert("মিউজিক চালানো যায়নি। আবার চেষ্টা করুন।");
+    }
+  } else {
+    music.pause();
+    $("musicToggle").textContent = "▶ Music Play";
+  }
+});
+
+/* INITIALIZE */
+
+async function initializeApp() {
+  await Promise.all([loadProfile(), loadPublicQuestions()]);
+
+  if (location.pathname === "/creator-room-7f3c") {
+    show("admin");
+    await checkAdmin();
+    return;
+  }
+
+  const match = location.pathname.match(/^\/play\/([^/]+)$/);
+
+  if (match) {
+    await loadQuiz(decodeURIComponent(match[1]));
+  } else {
+    show("home");
+  }
+}
+
+initializeApp().catch(error => {
+  console.error("App initialization error:", error);
+});
