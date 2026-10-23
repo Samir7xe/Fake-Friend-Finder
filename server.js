@@ -198,4 +198,13 @@ app.get('/api/admin/website-answers', admin, async (req, res) => {
     res.status(500).json({ error: 'Could not load results' });
   }
 });
-app.get('/play/:id',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));app.get('/creator-room-7f3c',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));app.get('*',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));app.listen(PORT,()=>console.log(`Real Friend Finder on ${PORT}`));
+app.get('/play/:id',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));app.get('/creator-room-7f3c',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));app.get('*',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));const fs = require('fs');
+
+pool.query(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'))
+  .then(() => {
+    app.listen(PORT, () => console.log(`Real Friend Finder on ${PORT}`));
+  })
+  .catch(err => {
+    console.error('Database setup failed:', err.message);
+    process.exit(1);
+  });
