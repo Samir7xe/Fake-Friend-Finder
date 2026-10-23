@@ -1,59 +1,15 @@
-/* ==========================================
-   REAL FRIEND FINDER
-   Complete public/app.js replacement
-   ========================================== */
+"use strict";
 
-const $ = (id) => document.getElementById(id);
+const $ = id => document.getElementById(id);
 
-const ids = [
-  "home",
-  "create",
-  "editor",
-  "play",
-  "how",
-  "profile",
-  "admin",
-  "publicMode",
-  "websiteMode"
-];
-
-let draft = [];
-let quiz = null;
-let sessionId = "";
-let player = "";
-let adminLinks = [
-  { label: "Instagram", url: "" },
-  { label: "Facebook", url: "" },
-  { label: "YouTube", url: "" }
-];
-
-let selectedWebsiteAnswers = {};
-let musicObjectUrl = null;
-
-/* ---------- GENERAL HELPERS ---------- */
-
-function on(id, event, callback) {
-  const element = $(id);
-  if (element) element.addEventListener(event, callback);
-}
-
-function message(id, text, isError = false) {
-  const element = $(id);
-  if (!element) return;
-
-  element.textContent = text;
-  element.style.color = isError ? "#ff7474" : "#76e6ad";
-}
-
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  })[character]);
-}
+const state = {
+  customQuestions: [],
+  websiteQuestions: [],
+  playQuestions: [],
+  sessionId: null,
+  links: [],
+  musicUrl: null
+};
 
 async function api(url, options = {}) {
   const response = await fetch(url, {
@@ -66,713 +22,673 @@ async function api(url, options = {}) {
   });
 
   const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(data.error || data.message || `Request failed (${response.status})`);
-  }
-
+  if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
   return data;
 }
 
-function show(id) {
-  ids.forEach((sectionId) => {
-    const section = $(sectionId);
-    if (section) section.classList.toggle("hidden", sectionId !== id);
-  });
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;",
+    '"': "&quot;", "'": "&#39;"
+  })[c]);
+}
 
+function show(id) {
+  document.querySelectorAll(".view").forEach(el => {
+    el.classList.toggle("hidden", el.id !== id);
+  });
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function setText(id, value) {
-  const element = $(id);
-  if (element) element.textContent = value ?? "";
+function msg(id, text, error = false) {
+  const el = $(id);
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove("hidden");
+  el.style.color = error ? "#d93050" : "";
 }
 
-function setHTML(id, value) {
-  const element = $(id);
-  if (element) element.innerHTML = value;
+function fail(error) {
+  return error?.message || "কাজটি করা যায়নি। আবার চেষ্টা করুন।";
 }
 
-/* ---------- HOME NAVIGATION ---------- */
+/* NAVIGATION */
 
-on("createBtn", "click", () => {
-  draft = [];
-  show("create");
-  renderDraft();
+document.querySelectorAll("[data-home]").forEach(button => {
+  button.addEventListener("click", () => show("home"));
 });
 
-on("howBtn", "click", () => show("how"));
-
-on("websiteModeBtn", "click", async () => {
+$("websiteModeBtn")?.addEventListener("click", async () => {
   show("websiteMode");
   await loadWebsiteQuestions();
 });
 
-on("publicModeBtn", "click", async () => {
-  show("publicMode");
-  await loadPublicQuestions();
-});
+$("createBtn")?.addEventListener("click", () => show("create"));
+$("howBtn")?.addEventListener("click", () => show("how"));
 
-on("profileBtn", "click", async () => {
+$("profileBubble")?.addEventListener("click", () => {
   show("profile");
-  await loadProfile();
+  loadProfile();
 });
 
-on("homeBtn", "click", () => show("home"));
+$("closeProfile")?.addEventListener("click", () => show("home"));
 
-document.querySelectorAll("[data-show]").forEach((button) => {
-  button.addEventListener("click", () => show(button.dataset.show));
+/* CUSTOM QUIZ CREATION */
+
+$("build")?.addEventListener("click", () => {
+  if (!$("creatorName").value.trim()) {
+    alert("আগে তোমার নাম লিখো।");
+    $("creatorName").focus();
+    return;
+  }
+
+  const count = Number($("count").value);
+  state.customQuestions = Array.from({ length: count }, () => ({
+    prompt: "",
+    options: ["", "", "", ""],
+    correctAnswer: ""
+  }));
+
+  renderEditor();
+  show("editor");
 });
 
-/* ---------- CUSTOM QUIZ BUILDER ---------- */
-
-function renderDraft() {
+function renderEditor() {
   const container = $("questionEditor");
-  if (!container) return;
 
-  container.innerHTML = "";
+  container.innerHTML = state.customQuestions.map((q, i) => `
+    <div class="question-card">
+      <h3>প্রশ্ন ${i + 1}</h3>
 
-  draft.forEach((question, index) => {
-    const card = document.createElement("div");
-    card.className = "question-card";
+      <label>প্রশ্ন লিখো
+        <textarea data-prompt="${i}" maxlength="300">${esc(q.prompt)}</textarea>
+      </label>
 
-    card.innerHTML = `
-      <h3>প্রশ্ন ${index + 1}</h3>
-
-      <label>প্রশ্ন লিখুন</label>
-      <input class="draft-prompt" value="${escapeHTML(question.prompt)}"
-        placeholder="প্রশ্ন লিখুন">
-
-      <label>চারটি অপশন লিখুন</label>
-      <div class="draft-options">
-        ${question.options.map((option, optionIndex) => `
-          <input class="draft-option" data-option="${optionIndex}"
-            value="${escapeHTML(option)}"
-            placeholder="অপশন ${optionIndex + 1}">
+      <div>
+        ${q.options.map((option, j) => `
+          <label>অপশন ${j + 1}
+            <input data-option="${i}:${j}" maxlength="120"
+              value="${esc(option)}" placeholder="অপশন লিখো">
+          </label>
         `).join("")}
       </div>
 
-      <label>সঠিক উত্তর নির্বাচন করুন</label>
-      <select class="draft-correct">
-        ${question.options.map((option, optionIndex) => `
-          <option value="${optionIndex}"
-            ${optionIndex === question.correctIndex ? "selected" : ""}>
-            অপশন ${optionIndex + 1}
-          </option>
-        `).join("")}
-      </select>
+      <button type="button" class="glow pale" data-add-option="${i}">
+        ＋ অপশন যোগ
+      </button>
 
-      <button type="button" class="remove-question">প্রশ্ন মুছুন</button>
-    `;
-
-    const promptInput = card.querySelector(".draft-prompt");
-    promptInput.addEventListener("input", () => {
-      question.prompt = promptInput.value;
-    });
-
-    card.querySelectorAll(".draft-option").forEach((input) => {
-      input.addEventListener("input", () => {
-        question.options[Number(input.dataset.option)] = input.value;
-        updateCorrectOptions(card, question);
-      });
-    });
-
-    card.querySelector(".draft-correct").addEventListener("change", (event) => {
-      question.correctIndex = Number(event.target.value);
-    });
-
-    card.querySelector(".remove-question").addEventListener("click", () => {
-      draft.splice(index, 1);
-      renderDraft();
-    });
-
-    container.appendChild(card);
-  });
-
-  setText("draftCount", `মোট প্রশ্ন: ${draft.length}`);
-}
-
-function updateCorrectOptions(card, question) {
-  const select = card.querySelector(".draft-correct");
-  if (!select) return;
-
-  const previousIndex = question.correctIndex;
-  select.innerHTML = question.options.map((option, index) => `
-    <option value="${index}" ${index === previousIndex ? "selected" : ""}>
-      অপশন ${index + 1}
-    </option>
+      <label>সঠিক উত্তর
+        <select data-correct="${i}">
+          <option value="">সঠিক উত্তর বেছে নাও</option>
+          ${q.options.filter(x => x.trim()).map(option => `
+            <option value="${esc(option)}"
+              ${q.correctAnswer === option ? "selected" : ""}>
+              ${esc(option)}
+            </option>
+          `).join("")}
+        </select>
+      </label>
+    </div>
   `).join("");
-}
 
-on("addQuestion", "click", () => {
-  if (draft.length >= 30) {
-    alert("সর্বোচ্চ ৩০টি প্রশ্ন যোগ করতে পারবেন।");
-    return;
-  }
-
-  draft.push({
-    prompt: "",
-    options: ["", "", "", ""],
-    correctIndex: 0
+  container.querySelectorAll("[data-prompt]").forEach(el => {
+    el.addEventListener("input", () => {
+      state.customQuestions[+el.dataset.prompt].prompt = el.value;
+    });
   });
 
-  renderDraft();
-});
+  container.querySelectorAll("[data-option]").forEach(el => {
+    el.addEventListener("input", () => {
+      const [qi, oi] = el.dataset.option.split(":").map(Number);
+      const q = state.customQuestions[qi];
+      const old = q.options[oi];
+      q.options[oi] = el.value;
 
-on("generateQuestions", "click", () => {
-  const countInput = $("questionCount");
-  const count = Number(countInput?.value || 20);
+      if (q.correctAnswer === old) q.correctAnswer = "";
 
-  if (!Number.isInteger(count) || count < 20 || count > 30) {
-    alert("২০ থেকে ৩০টির মধ্যে প্রশ্নের সংখ্যা নির্বাচন করুন।");
+      const select = container.querySelector(`[data-correct="${qi}"]`);
+      select.innerHTML = `<option value="">সঠিক উত্তর বেছে নাও</option>` +
+        q.options.filter(x => x.trim()).map(option => `
+          <option value="${esc(option)}">${esc(option)}</option>
+        `).join("");
+      select.value = q.correctAnswer;
+    });
+  });
+
+  container.querySelectorAll("[data-correct]").forEach(el => {
+    el.addEventListener("change", () => {
+      state.customQuestions[+el.dataset.correct].correctAnswer = el.value;
+    });
+  });
+
+  container.querySelectorAll("[data-add-option]").forEach(button => {
+    button.addEventListener("click", () => {
+      const q = state.customQuestions[+button.dataset.addOption];
+      if (q.options.length >= 12) return alert("সর্বোচ্চ ১২টি অপশন রাখা যাবে।");
+      q.options.push("");
+      renderEditor();
+    });
+  });
+}
+
+$("addQuestion")?.addEventListener("click", () => {
+  if (state.customQuestions.length >= 30) {
+    alert("সর্বোচ্চ ৩০টি প্রশ্ন রাখা যাবে।");
     return;
   }
 
-  draft = Array.from({ length: count }, () => ({
+  state.customQuestions.push({
     prompt: "",
     options: ["", "", "", ""],
-    correctIndex: 0
-  }));
+    correctAnswer: ""
+  });
 
-  renderDraft();
+  renderEditor();
 });
 
-on("saveQuiz", "click", async () => {
-  const creatorName = $("creatorName")?.value.trim() || "";
-  const creatorGender = $("creatorGender")?.value || "";
-
-  if (!creatorName) {
-    alert("আপনার নাম লিখুন।");
-    return;
-  }
-
-  if (draft.length < 20 || draft.length > 30) {
-    alert("কুইজে ২০–৩০টি প্রশ্ন রাখতে হবে।");
-    return;
-  }
-
-  const questions = draft.map((question, index) => ({
-    prompt: question.prompt.trim(),
-    options: question.options.map((option) => option.trim()),
-    correctAnswer: question.options[question.correctIndex]?.trim() || ""
+$("saveQuiz")?.addEventListener("click", async () => {
+  const questions = state.customQuestions.map(q => ({
+    prompt: q.prompt.trim(),
+    options: q.options.map(x => x.trim()).filter(Boolean),
+    correctAnswer: q.correctAnswer.trim()
   }));
 
-  for (let index = 0; index < questions.length; index++) {
-    const question = questions[index];
-
-    if (!question.prompt) {
-      alert(`প্রশ্ন ${index + 1} লিখুন।`);
-      return;
-    }
-
-    if (
-      question.options.some((option) => !option) ||
-      new Set(question.options).size !== question.options.length
-    ) {
-      alert(`প্রশ্ন ${index + 1}-এর চারটি আলাদা অপশন লিখুন।`);
-      return;
-    }
-
-    if (!question.correctAnswer) {
-      alert(`প্রশ্ন ${index + 1}-এর সঠিক উত্তর নির্বাচন করুন।`);
-      return;
-    }
+  if (questions.some(q =>
+    !q.prompt ||
+    q.options.length < 4 ||
+    q.options.length > 12 ||
+    new Set(q.options).size !== q.options.length ||
+    !q.correctAnswer ||
+    !q.options.includes(q.correctAnswer)
+  )) {
+    alert("প্রতিটি প্রশ্নে ৪–১২টি আলাদা অপশন ও সঠিক উত্তর দিন।");
+    return;
   }
 
   const button = $("saveQuiz");
-  if (button) button.disabled = true;
+  button.disabled = true;
 
   try {
     const result = await api("/api/quizzes", {
       method: "POST",
       body: JSON.stringify({
-        creatorName,
-        creatorGender,
+        creatorName: $("creatorName").value.trim(),
+        creatorGender: $("gender").value,
         questions
       })
     });
 
-    const shareUrl = result.shareUrl
-      ? new URL(result.shareUrl, location.origin).href
-      : `${location.origin}/play/${encodeURIComponent(result.id)}`;
+    const box = $("shareResult");
+    box.classList.remove("hidden");
+    box.innerHTML = `
+      <p>🎉 তোমার কুইজ তৈরি হয়েছে!</p>
+      <p><a href="${esc(result.shareUrl)}">${esc(result.shareUrl)}</a></p>
+      <button type="button" id="copyQuizLink" class="glow">লিংক কপি করো</button>
+    `;
 
-    setText("shareUrl", shareUrl);
-
-    const output = $("shareResult");
-    if (output) output.classList.remove("hidden");
-
-    show("editor");
+    $("copyQuizLink").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(result.shareUrl);
+        alert("লিংক কপি হয়েছে!");
+      } catch {
+        prompt("লিংক কপি করো:", result.shareUrl);
+      }
+    });
   } catch (error) {
-    alert("কুইজ তৈরি করা যায়নি: " + error.message);
+    alert(fail(error));
   } finally {
-    if (button) button.disabled = false;
+    button.disabled = false;
   }
 });
 
-on("copyShareUrl", "click", async () => {
-  const url = $("shareUrl")?.textContent.trim();
-
-  if (!url) {
-    alert("আগে কুইজ তৈরি করুন।");
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText(url);
-    alert("কুইজের লিংক কপি হয়েছে!");
-  } catch {
-    prompt("এই লিংকটি কপি করুন:", url);
-  }
-});
-
-/* ---------- PLAY A SHARED QUIZ ---------- */
+/* PLAY A SHARED QUIZ */
 
 async function loadQuiz(id) {
-  show("play");
-
   try {
-    quiz = await api(`/api/quizzes/${encodeURIComponent(id)}`);
+    const quiz = await api(`/api/quizzes/${encodeURIComponent(id)}`);
+    $("playTitle").textContent = `${quiz.creatorName}-এর কুইজ 💙`;
 
-    setText("playTitle", `${quiz.creatorName || "বন্ধু"}-র কুইজ`);
-    setText("playDescription", "নিজের উত্তর বেছে নিয়ে কুইজ শুরু করুন।");
+    $("pickList").innerHTML = quiz.questions.map(q => `
+      <label class="question-card">
+        <input type="checkbox" data-pick value="${q.id}">
+        ${esc(q.prompt)}
+      </label>
+    `).join("");
 
-    const list = $("playQuestionList");
-    if (!list) return;
-
-    list.innerHTML = "";
-
-    (quiz.questions || []).forEach((question) => {
-      const label = document.createElement("label");
-      label.className = "question-select";
-
-      label.innerHTML = `
-        <input type="checkbox" value="${escapeHTML(question.id)}">
-        <span>${escapeHTML(question.prompt)}</span>
-      `;
-
-      list.appendChild(label);
-    });
-
-    setText("playQuestionCount", `মোট প্রশ্ন: ${(quiz.questions || []).length}`);
+    $("pickList").classList.remove("hidden");
+    $("startPlay").classList.remove("hidden");
+    $("answers").innerHTML = "";
+    $("score").textContent = "";
+    show("play");
   } catch (error) {
-    setText("playDescription", "কুইজটি লোড করা যায়নি: " + error.message);
+    alert(fail(error));
+    show("home");
   }
 }
 
-on("startQuiz", "click", async () => {
-  if (!quiz) {
-    alert("প্রথমে একটি কুইজ খুলুন।");
-    return;
-  }
+$("startPlay")?.addEventListener("click", async () => {
+  const playerName = $("playerName").value.trim();
+  const questionIds = [...document.querySelectorAll("[data-pick]:checked")]
+    .map(el => Number(el.value));
 
-  player = $("playerName")?.value.trim() || "";
+  if (!playerName) return alert("তোমার নাম লিখো।");
+  if (questionIds.length !== 10) return alert("ঠিক ১০টি প্রশ্ন বেছে নাও।");
 
-  if (!player) {
-    alert("আপনার নাম লিখুন।");
-    return;
-  }
-
-  const questionIds = Array.from(
-    document.querySelectorAll("#playQuestionList input:checked")
-  ).map((input) => input.value);
-
-  if (questionIds.length !== 10) {
-    alert("ঠিক ১০টি প্রশ্ন নির্বাচন করুন।");
-    return;
-  }
+  const match = location.pathname.match(/^\/play\/([^/]+)$/);
+  if (!match) return alert("কুইজের লিংক সঠিক নয়।");
 
   try {
-    const result = await api(`/api/quizzes/${encodeURIComponent(quiz.id)}/start`, {
+    const result = await api(`/api/quizzes/${encodeURIComponent(match[1])}/start`, {
       method: "POST",
-      body: JSON.stringify({ playerName: player, questionIds })
+      body: JSON.stringify({ playerName, questionIds })
     });
 
-    sessionId = result.sessionId;
+    state.sessionId = result.sessionId;
+    state.playQuestions = result.questions;
 
-    const container = $("answerQuestionList");
-    if (!container) return;
+    $("pickList").classList.add("hidden");
+    $("startPlay").classList.add("hidden");
 
-    container.innerHTML = "";
-
-    result.questions.forEach((question, index) => {
-      const card = document.createElement("div");
-      card.className = "question-card";
-
-      card.innerHTML = `
-        <h3>${index + 1}. ${escapeHTML(question.prompt)}</h3>
-        ${(question.options || []).map((option) => `
+    $("answers").innerHTML = result.questions.map((q, i) => `
+      <div class="question-card">
+        <h3>${i + 1}. ${esc(q.prompt)}</h3>
+        ${q.options.map(option => `
           <label>
-            <input type="radio" name="answer-${escapeHTML(question.id)}"
-              value="${escapeHTML(option)}">
-            ${escapeHTML(option)}
+            <input type="radio" name="answer-${q.id}" value="${esc(option)}">
+            ${esc(option)}
           </label>
         `).join("")}
-      `;
+      </div>
+    `).join("") + `<button type="button" id="submitPlay" class="glow">উত্তর জমা দাও</button>`;
 
-      container.appendChild(card);
-    });
-
-    show("editor");
-    const answerSection = $("quizAnswerSection");
-    if (answerSection) answerSection.classList.remove("hidden");
-
-    setText("answerMessage", "");
+    $("submitPlay").addEventListener("click", submitPlay);
   } catch (error) {
-    alert("কুইজ শুরু করা যায়নি: " + error.message);
+    alert(fail(error));
   }
 });
 
-on("submitQuizAnswers", "click", async () => {
-  if (!sessionId) {
-    alert("প্রথমে কুইজ শুরু করুন।");
-    return;
-  }
-
+async function submitPlay() {
   const answers = {};
 
-  document.querySelectorAll("#answerQuestionList input:checked").forEach((input) => {
-    const match = input.name.match(/^answer-(.+)$/);
-    if (match) answers[match[1]] = input.value;
-  });
+  for (const q of state.playQuestions) {
+    const selected = document.querySelector(`input[name="answer-${q.id}"]:checked`);
+    if (!selected) return alert("সব প্রশ্নের উত্তর দাও।");
+    answers[q.id] = selected.value;
+  }
 
   try {
-    const result = await api(`/api/sessions/${encodeURIComponent(sessionId)}/submit`, {
+    const result = await api(`/api/sessions/${encodeURIComponent(state.sessionId)}/submit`, {
       method: "POST",
-      body: JSON.stringify({ answers })
+      body: JSON.stringify({
+        playerName: $("playerName").value.trim(),
+        answers
+      })
     });
 
-    setText("answerMessage", `আপনার স্কোর: ${result.score} / ${result.total}`);
-    sessionId = "";
+    $("score").textContent = `তোমার স্কোর: ${result.score}/${result.total}`;
+    $("submitPlay").disabled = true;
   } catch (error) {
-    setText("answerMessage", "উত্তর জমা হয়নি: " + error.message);
-  }
-});
-
-/* ---------- PUBLIC QUESTION SUGGESTIONS ---------- */
-
-async function loadPublicQuestions() {
-  const container = $("publicQuestionList");
-  if (!container) return;
-
-  container.innerHTML = "<p>প্রশ্ন লোড হচ্ছে...</p>";
-
-  try {
-    const result = await api("/api/public-questions");
-    const questions = Array.isArray(result) ? result : result.questions || [];
-
-    if (!questions.length) {
-      container.innerHTML = "<p>এখনও কোনো অনুমোদিত প্রশ্ন নেই।</p>";
-      return;
-    }
-
-    container.innerHTML = questions.map((item) => `
-      <article class="question-card">
-        <p>${escapeHTML(item.question)}</p>
-        <small>প্রস্তাব করেছেন: ${escapeHTML(item.name || "একজন বন্ধু")}</small>
-      </article>
-    `).join("");
-  } catch (error) {
-    container.innerHTML =
-      `<p>প্রশ্ন লোড করা যায়নি: ${escapeHTML(error.message)}</p>`;
+    alert(fail(error));
   }
 }
 
-on("submitPublicQuestion", "click", async () => {
-  const name = $("publicQuestionName")?.value.trim() || "";
-  const question = $("publicQuestionText")?.value.trim() || "";
-
-  if (!question) {
-    alert("আপনার প্রশ্নটি লিখুন।");
-    return;
-  }
-
-  try {
-    await api("/api/public-questions", {
-      method: "POST",
-      body: JSON.stringify({ name, question })
-    });
-
-    message("publicQuestionMessage", "প্রশ্ন জমা হয়েছে। অনুমোদনের পর দেখা যাবে।");
-
-    if ($("publicQuestionText")) $("publicQuestionText").value = "";
-    await loadPublicQuestions();
-  } catch (error) {
-    message("publicQuestionMessage", error.message, true);
-  }
-});
-
-/* ---------- WEBSITE QUESTION BANK ---------- */
+/* WEBSITE QUESTIONS */
 
 async function loadWebsiteQuestions() {
   const container = $("websiteQuestionList");
-  if (!container) return;
-
-  container.innerHTML = "<p>প্রশ্ন লোড হচ্ছে...</p>";
-  selectedWebsiteAnswers = {};
+  container.textContent = "প্রশ্ন লোড হচ্ছে…";
 
   try {
-    const result = await api("/api/website-questions");
-    const questions = Array.isArray(result) ? result : result.questions || [];
+    state.websiteQuestions = await api("/api/website-questions");
 
-    if (!questions.length) {
-      container.innerHTML = `
-        <p>এখনও কোনো প্রশ্ন যোগ করা হয়নি।</p>
-        <p>প্রশাসককে প্রশ্ন যোগ করতে হবে।</p>
-      `;
+    if (!state.websiteQuestions.length) {
+      container.textContent = "এখনও কোনো প্রশ্ন যোগ করা হয়নি।";
       return;
     }
 
-    container.innerHTML = "";
-
-    questions.forEach((question, index) => {
-      const card = document.createElement("div");
-      card.className = "question-card";
-
-      card.innerHTML = `
-        <h3>${index + 1}. ${escapeHTML(question.question)}</h3>
-        ${(question.options || []).map((option) => `
+    container.innerHTML = state.websiteQuestions.map((q, i) => `
+      <div class="question-card">
+        <h3>${i + 1}. ${esc(q.question)}</h3>
+        ${(Array.isArray(q.options) ? q.options : []).map(option => `
           <label>
-            <input type="radio" name="website-${escapeHTML(question.id)}"
-              value="${escapeHTML(option)}">
-            ${escapeHTML(option)}
+            <input type="radio" name="web-${q.id}" value="${esc(option)}">
+            ${esc(option)}
           </label>
         `).join("")}
-      `;
-
-      card.querySelectorAll("input").forEach((input) => {
-        input.addEventListener("change", () => {
-          selectedWebsiteAnswers[question.id] = input.value;
-        });
-      });
-
-      container.appendChild(card);
-    });
-
-    setText("websiteQuestionCount", `মোট প্রশ্ন: ${questions.length}`);
+      </div>
+    `).join("");
   } catch (error) {
-    container.innerHTML = `
-      <p>ওয়েবসাইটের প্রশ্ন লোড করা যায়নি।</p>
-      <p>${escapeHTML(error.message)}</p>
-      <p>ডেটাবেস টেবিল ও সার্ভারের সেটিংস পরীক্ষা করতে হবে।</p>
-    `;
+    container.textContent = fail(error);
   }
 }
 
-on("submitWebsiteAnswers", "click", async () => {
-  const playerName = $("websitePlayerName")?.value.trim() || "";
+$("submitWebsiteAnswers")?.addEventListener("click", async () => {
+  const playerName = $("websitePlayerName").value.trim();
+  if (!playerName) return alert("তোমার নাম লিখো।");
+  if (!state.websiteQuestions.length) return alert("প্রশ্ন উপলভ্য নেই।");
 
-  if (!playerName) {
-    alert("আপনার নাম লিখুন।");
-    return;
-  }
+  const answers = {};
 
-  if (!Object.keys(selectedWebsiteAnswers).length) {
-    alert("অন্তত একটি প্রশ্নের উত্তর দিন।");
-    return;
+  for (const q of state.websiteQuestions) {
+    const selected = document.querySelector(`input[name="web-${q.id}"]:checked`);
+    if (!selected) return alert("সব প্রশ্নের উত্তর দাও।");
+    answers[q.id] = selected.value;
   }
 
   try {
     const result = await api("/api/website-answers", {
       method: "POST",
-      body: JSON.stringify({
-        playerName,
-        answers: selectedWebsiteAnswers
-      })
+      body: JSON.stringify({ playerName, answers })
     });
-
-    setText("websiteScore", `আপনার স্কোর: ${result.score} / ${result.total}`);
-
-    const resultBox = $("websiteScoreResult");
-    if (resultBox) resultBox.classList.remove("hidden");
+    msg("websiteScore", `তোমার স্কোর: ${result.score}/${result.total}`);
   } catch (error) {
-    message("websiteScore", "উত্তর জমা হয়নি: " + error.message, true);
+    msg("websiteScore", fail(error), true);
   }
 });
 
-/* ---------- PROFILE AND SOCIAL LINKS ---------- */
+/* PUBLIC QUESTIONS */
 
-function setAvatar(url) {
-  const bubble = $("profileBubble");
-  if (!bubble) return;
-
-  if (url) {
-    bubble.innerHTML = `
-      <img src="${escapeHTML(url)}" alt="Profile photo"
-        style="width:100%;height:100%;object-fit:cover;border-radius:50%">
-    `;
-  } else {
-    bubble.textContent = "S";
+async function loadPublicQuestions() {
+  try {
+    const questions = await api("/api/public-questions");
+    $("publicQuestionList").innerHTML = questions.length
+      ? questions.map(q => `<div class="question-card">${esc(q.question)}</div>`).join("")
+      : "<p>এখনও কোনো অনুমোদিত প্রশ্ন নেই।</p>";
+  } catch (error) {
+    $("publicQuestionList").textContent = fail(error);
   }
 }
+
+$("submitPublicQuestion")?.addEventListener("click", async () => {
+  try {
+    await api("/api/public-questions", {
+      method: "POST",
+      body: JSON.stringify({
+        name: $("publicName").value.trim(),
+        question: $("publicQuestion").value.trim()
+      })
+    });
+
+    $("publicQuestion").value = "";
+    msg("publicMessage", "প্রশ্ন জমা হয়েছে। অনুমোদনের পর প্রকাশিত হবে।");
+    await loadPublicQuestions();
+  } catch (error) {
+    msg("publicMessage", fail(error), true);
+  }
+});
+
+/* PROFILE */
 
 async function loadProfile() {
   try {
-    const settings = await api("/api/settings");
+    const profile = await api("/api/settings");
+    $("profileName").textContent = profile.displayName || "Your Name";
 
-    setText("profileName", settings.profileName || "Samir Akhtar");
-    setText("displayName", settings.profileName || "Samir Akhtar");
-
-    const avatarInput = $("avatarUrl");
-    if (avatarInput) avatarInput.value = settings.avatarUrl || "";
-
-    setAvatar(settings.avatarUrl || "");
-
-    adminLinks = Array.isArray(settings.socialLinks)
-      ? settings.socialLinks
-      : adminLinks;
-
-    const container = $("socialLinks");
-    if (container) {
-      container.innerHTML = adminLinks
-        .filter((link) => link.url)
-        .map((link) => `
-          <a href="${escapeHTML(link.url)}" target="_blank"
-            rel="noopener noreferrer">${escapeHTML(link.label)}</a>
-        `).join("");
+    if (profile.avatar) {
+      $("largeAvatar").innerHTML =
+        `<img src="${esc(profile.avatar)}" alt="Avatar">`;
+    } else {
+      $("largeAvatar").textContent = "✧";
     }
 
-    renderLinkEditor();
+    $("socialLinks").innerHTML = (profile.links || [])
+      .filter(x => x.label && /^https?:\/\//i.test(x.url || ""))
+      .map(x => `<p><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.label)}</a></p>`)
+      .join("") || "<p>এখনও কোনো লিংক নেই।</p>";
   } catch (error) {
-    console.error("Profile loading failed:", error);
+    console.error(error);
   }
 }
 
-function renderLinkEditor() {
-  const container = $("linkEditor");
-  if (!container) return;
-
-  container.innerHTML = adminLinks.map((link, index) => `
-    <div class="social-edit-row">
-      <input data-link-label="${index}" value="${escapeHTML(link.label)}"
-        placeholder="Social platform">
-      <input data-link-url="${index}" value="${escapeHTML(link.url)}"
-        placeholder="https://...">
-    </div>
-  `).join("");
-}
-
-on("addLink", "click", () => {
-  adminLinks.push({ label: "", url: "" });
-  renderLinkEditor();
-});
-
-on("saveProfile", "click", async () => {
-  adminLinks = adminLinks.map((link, index) => ({
-    label: $(`linkLabel${index}`)?.value || link.label,
-    url: $(`linkUrl${index}`)?.value || link.url
-  }));
-
-  const container = $("linkEditor");
-
-  if (container) {
-    container.querySelectorAll("[data-link-label]").forEach((input) => {
-      const index = Number(input.dataset.linkLabel);
-      if (adminLinks[index]) adminLinks[index].label = input.value.trim();
-    });
-
-    container.querySelectorAll("[data-link-url]").forEach((input) => {
-      const index = Number(input.dataset.linkUrl);
-      if (adminLinks[index]) adminLinks[index].url = input.value.trim();
-    });
-  }
-
-  try {
-    await api("/api/admin/settings", {
-      method: "PUT",
-      body: JSON.stringify({
-        profileName: $("profileNameInput")?.value.trim() || "Samir Akhtar",
-        avatarUrl: $("avatarUrl")?.value.trim() || "",
-        socialLinks: adminLinks
-      })
-    });
-
-    message("profileMessage", "প্রোফাইল সংরক্ষণ হয়েছে।");
-    await loadProfile();
-  } catch (error) {
-    message("profileMessage", error.message, true);
-  }
-});
-
-/* ---------- ADMIN LOGIN ---------- */
+/* ADMIN */
 
 async function checkAdmin() {
   try {
-    const result = await api("/api/admin/me");
-    if (result.authenticated) showAdminTools();
+    await api("/api/admin/me");
+    $("adminTools").classList.remove("hidden");
+    await loadAdminData();
   } catch {
-    // Not logged in.
+    $("adminTools").classList.add("hidden");
   }
 }
 
-function showAdminTools() {
-  const login = $("adminLogin");
-  const tools = $("adminTools");
-
-  if (login) login.classList.add("hidden");
-  if (tools) tools.classList.remove("hidden");
-
-  loadAdminQuizzes();
-  loadAdminPublicQuestions();
-  loadAdminWebsiteAnswers();
-  loadWebsiteAdminQuestions();
-}
-
-on("adminLogin", "submit", async (event) => {
+$("adminLogin")?.addEventListener("submit", async event => {
   event.preventDefault();
-
-  const password = $("adminPassword")?.value || "";
 
   try {
     await api("/creator-room-7f3c/login", {
       method: "POST",
-      body: JSON.stringify({ password })
+      body: JSON.stringify({ password: $("adminPassword").value })
     });
 
-    message("adminMessage", "লগইন সফল হয়েছে।");
-    showAdminTools();
+    $("adminPassword").value = "";
+    $("adminMessage").textContent = "Login সফল হয়েছে।";
+    await checkAdmin();
   } catch (error) {
-    message("adminMessage", error.message, true);
+    $("adminMessage").textContent = fail(error);
   }
 });
 
-on("logout", "click", async () => {
+async function loadAdminData() {
   try {
-    await api("/creator-room-7f3c/logout", { method: "POST" });
-  } catch {
-    // Continue to hide admin tools.
+    const profile = await api("/api/settings");
+    $("displayName").value = profile.displayName || "";
+    $("avatarUrl").value = profile.avatar || "";
+    renderLinks(profile.links || []);
+  } catch (error) {
+    $("adminMessage").textContent = fail(error);
   }
 
-  const tools = $("adminTools");
-  const login = $("adminLogin");
+  await Promise.all([
+    loadAdminQuizzes(),
+    loadAdminPublicQuestions(),
+    loadAdminWebsiteQuestions(),
+    loadAdminWebsiteAnswers()
+  ]);
+}
 
-  if (tools) tools.classList.add("hidden");
-  if (login) login.classList.remove("hidden");
+function renderLinks(links) {
+  state.links = links.map(x => ({
+    label: x.label || "",
+    url: x.url || ""
+  }));
 
-  show("home");
+  $("linkEditor").innerHTML = state.links.map((x, i) => `
+    <div class="question-card">
+      <label>Link name
+        <input data-link-label="${i}" value="${esc(x.label)}">
+      </label>
+      <label>URL
+        <input data-link-url="${i}" value="${esc(x.url)}">
+      </label>
+      <button type="button" data-remove-link="${i}">মুছুন</button>
+    </div>
+  `).join("");
+
+  $("linkEditor").querySelectorAll("[data-link-label]").forEach(el => {
+    el.addEventListener("input", () => state.links[+el.dataset.linkLabel].label = el.value);
+  });
+
+  $("linkEditor").querySelectorAll("[data-link-url]").forEach(el => {
+    el.addEventListener("input", () => state.links[+el.dataset.linkUrl].url = el.value);
+  });
+
+  $("linkEditor").querySelectorAll("[data-remove-link]").forEach(el => {
+    el.addEventListener("click", () => {
+      state.links.splice(+el.dataset.removeLink, 1);
+      renderLinks(state.links);
+    });
+  });
+}
+
+$("addLink")?.addEventListener("click", () => {
+  if (state.links.length >= 30) return alert("সর্বোচ্চ ৩০টি লিংক রাখা যাবে।");
+  state.links.push({ label: "", url: "" });
+  renderLinks(state.links);
 });
 
-/* ---------- ADMIN: QUIZ RESULTS ---------- */
+$("saveProfile")?.addEventListener("click", async () => {
+  try {
+    await api("/api/admin/settings", {
+      method: "PUT",
+      body: JSON.stringify({
+        displayName: $("displayName").value.trim(),
+        avatar: $("avatarUrl").value.trim(),
+        links: state.links
+      })
+    });
+
+    alert("Profile সেভ হয়েছে।");
+    await loadProfile();
+  } catch (error) {
+    alert(fail(error));
+  }
+});
 
 async function loadAdminQuizzes() {
   const container = $("quizAdmin");
-  if (!container) return;
 
   try {
-    const result = await api("/api/admin/quizzes");
-    const quizzes = Array.isArray(result) ? result : result.quizzes || [];
-
-    container.innerHTML = quizzes.map((item) => `
+    const quizzes = await api("/api/admin/quizzes");
+    container.innerHTML = quizzes.map(q => `
       <div class="question-card">
-        <p>${escapeHTML(item.creator_name || item.creatorName || "কুইজ")}</p>
-        <button type="button" data-results="${escapeHTML(item.id)}">
-          ফলাফল দেখুন
-        </button>
-        <div id="results-${escapeHTML(item.id)}"></div>
+        <p>${esc(q.creator_name)} — ${q.question_count} প্রশ্ন</p>
+        <p>জমা উত্তর: ${q.submission_count}</p>
+        <button type="button" data-results="${esc(q.id)}">ফলাফল দেখুন</button>
+        <div id="results-${esc(q.id)}"></div>
       </div>
-    `).join("");
+    `).join("") || "<p>কোনো কুইজ নেই।</p>";
 
-    container.querySelectorAll("[data-results]").forEach((button) => {
-      button.addEventListener("click", () => loadQuizResults(button.dataset.results));
+    container.querySelectorAll("[data-results]").forEach(button => {
+      button.addEventListener("click", () => loadResults(button.dataset.results));
     });
   } catch (error) {
-    contain
+    container.textContent = fail(error);
+  }
+}
+
+async function loadResults(id) {
+  const container = $(`results-${id}`);
+  try {
+    const results = await api(`/api/admin/quizzes/${encodeURIComponent(id)}/results`);
+    container.innerHTML = results.map(r =>
+      `<p>${esc(r.player_name)}: ${r.score}/${r.total}</p>`
+    ).join("") || "<p>কোনো ফলাফল নেই।</p>";
+  } catch (error) {
+    container.textContent = fail(error);
+  }
+}
+
+async function loadAdminPublicQuestions() {
+  const container = $("adminPublicQuestions");
+
+  try {
+    const questions = await api("/api/admin/public-questions");
+    container.innerHTML = questions.map(q => `
+      <div class="question-card">
+        <p>${esc(q.question)}</p>
+        <p>প্রেরক: ${esc(q.submitter_name)}</p>
+        <button type="button" data-review="${q.id}" data-status="approved">অনুমোদন</button>
+        <button type="button" data-review="${q.id}" data-status="rejected">বাতিল</button>
+      </div>
+    `).join("") || "<p>পর্যালোচনার জন্য কোনো প্রশ্ন নেই।</p>";
+
+    container.querySelectorAll("[data-review]").forEach(button => {
+      button.addEventListener("click", async () => {
+        try {
+          await api(`/api/admin/public-questions/${button.dataset.review}`, {
+            method: "PUT",
+            body: JSON.stringify({ status: button.dataset.status })
+          });
+          await loadAdminPublicQuestions();
+          await loadPublicQuestions();
+        } catch (error) {
+          alert(fail(error));
+        }
+      });
+    });
+  } catch (error) {
+    container.textContent = fail(error);
+  }
+}
+
+async function loadAdminWebsiteQuestions() {
+  const container = $("adminWebsiteQuestions");
+
+  try {
+    const questions = await api("/api/website-questions");
+    container.innerHTML = questions.map(q => `
+      <div class="question-card">
+        <p>${esc(q.question)}</p>
+        <p>${(q.options || []).map(esc).join(" · ")}</p>
+        <button type="button" data-delete-web="${q.id}">মুছুন</button>
+      </div>
+    `).join("") || "<p>কোনো সক্রিয় প্রশ্ন নেই।</p>";
+
+    container.querySelectorAll("[data-delete-web]").forEach(button => {
+      button.addEventListener("click", async () => {
+        if (!confirm("এই প্রশ্নটি মুছে ফেলবেন?")) return;
+
+        try {
+          await api(`/api/admin/website-questions/${button.dataset.deleteWeb}`, {
+            method: "DELETE"
+          });
+          await loadAdminWebsiteQuestions();
+          await loadWebsiteQuestions();
+        } catch (error) {
+          alert(fail(error));
+        }
+      });
+    });
+  } catch (error) {
+    container.textContent = fail(error);
+  }
+}
+
+/* ADMIN: ADD WEBSITE QUESTION */
+
+function renderWebsiteOptions(options = ["", ""]) {
+  $("newWebsiteOptions").innerHTML = `
+    ${options.map((option, i) => `
+      <label>অপশন ${i + 1}
+        <input data-new-option="${i}" value="${esc(option)}" maxlength="120">
+      </label>
+    `).join("")}
+    <label>সঠিক উত্তর
+      <select id="newCorrect">
+        <option value="">সঠিক উত্তর বেছে নাও</option>
+        ${options.filter(x => x.trim()).map(x =>
+          `<option value="${esc(x)}">${esc(x)}</option>`
+        ).join("")}
+      </select>
+    </label>
+  `;
+}
+
+renderWebsiteOptions();
+
+$("addWebsiteQuestion")?.addEventListener("click", () => {
+  const options = [...$("newWebsiteOptions").querySelectorAll("[data-new-option]")]
+    .map(el => el.value);
+
+  if (options.length >= 12) return alert("সর্বোচ্চ ১২টি অপশন রাখা যাবে।");
+  options.push("");
+  renderWebsiteOptions(options);
+});
+
+$("saveWebsiteQuestion")?.addEventListener("click", async () => {
+  const question = $("newWebsiteQuestion").value.trim();
+  const options = [...$("newWebsiteOptions").querySelectorAll("[data-new-option]")]
+    .map(el => el.value.trim()).filter(Boolean);
+  const correctAnswer = $("newCorrect")?.value || "";
+
+  if (!question || options.length < 2 ||
+      new Set(options).size !== options.length ||
+      !correctAnswer || !options.includes(correctAnswer)) {
+    return msg("websiteAdminMessage", "প্রশ্ন, আলাদা অপশন ও সঠিক উত্তর দিন।", true);
+  }
+
+  try {
+    await api("/api/admin/website-questions", {
+      method: "POST",
+ 
