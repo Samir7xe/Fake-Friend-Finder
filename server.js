@@ -14,4 +14,188 @@ app.post('/api/quizzes',async(q,s)=>{let name=clean(q.body?.creatorName,50),gend
 app.get('/api/quizzes/:id',async(q,s)=>{let quiz=await pool.query('SELECT id,creator_name FROM quizzes WHERE id=$1',[q.params.id]);if(!quiz.rowCount)return s.status(404).json({error:'Quiz not found'});let qs=await pool.query('SELECT id,prompt,options FROM questions WHERE quiz_id=$1 ORDER BY id',[q.params.id]);s.json({id:quiz.rows[0].id,creatorName:quiz.rows[0].creator_name,questions:qs.rows})});
 app.post('/api/quizzes/:id/start',async(q,s)=>{let ids=Array.isArray(q.body?.questionIds)?q.body.questionIds.map(Number):[],name=clean(q.body?.playerName,50);if(!name)return s.status(400).json({error:'Enter your name'});if(ids.length!==10||new Set(ids).size!==10)return s.status(400).json({error:'Choose exactly 10 different questions'});let exists=await pool.query('SELECT id FROM quizzes WHERE id=$1',[q.params.id]);if(!exists.rowCount)return s.status(404).json({error:'Quiz not found'});let r=await pool.query('SELECT id,prompt,options,correct_answer FROM questions WHERE quiz_id=$1 AND id=ANY($2::bigint[])',[q.params.id,ids]);if(r.rowCount!==10)return s.status(400).json({error:'Invalid question selection'});let sid=rid(),presented=r.rows.map(x=>({id:x.id,prompt:x.prompt,options:[...x.options.filter(a=>a!==x.correct_answer).sort(()=>Math.random()-.5).slice(0,3),x.correct_answer].sort(()=>Math.random()-.5)}));await pool.query('INSERT INTO quiz_sessions(id,quiz_id,question_order) VALUES($1,$2,$3::jsonb)',[sid,q.params.id,JSON.stringify(presented.map(x=>x.id))]);s.json({sessionId:sid,playerName:name,questions:presented})});
 app.post('/api/sessions/:id/submit',async(q,s)=>{let name=clean(q.body?.playerName,50),answers=q.body?.answers&&typeof q.body.answers==='object'?q.body.answers:{},sr=await pool.query('SELECT id,quiz_id,question_order FROM quiz_sessions WHERE id=$1',[q.params.id]);if(!sr.rowCount)return s.status(404).json({error:'Session not found'});let order=sr.rows[0].question_order,qs=await pool.query('SELECT id,correct_answer FROM questions WHERE quiz_id=$1 AND id=ANY($2::bigint[])',[sr.rows[0].quiz_id,order]),correct=new Map(qs.rows.map(x=>[String(x.id),x.correct_answer]));let score=order.filter(id=>String(answers[id]||'')===correct.get(String(id))).length,saved={};for(let id of order)saved[id]=clean(answers[id],120);await pool.query('INSERT INTO submissions(session_id,player_name,answers,score,total) VALUES($1,$2,$3::jsonb,$4,10)',[q.params.id,name||'Guest',JSON.stringify(saved),score]);s.json({score,total:10})});
+// PUBLIC QUESTIONS
+app.post('/api/public-questions', async (req, res) => {
+  try {
+    const question = clean(req.body?.question, 500);
+    const name = clean(req.body?.name, 50) || 'Anonymous';
+    if (question.length < 3)
+      return res.status(400).json({ error: 'Question is too short' });
+
+    await pool.query(
+      'INSERT INTO public_questions(question, submitter_name) VALUES($1,$2)',
+      [question, name]
+    );
+    res.status(201).json({ ok: true, message: 'Submitted for review' });
+  } catch {
+    res.status(500).json({ error: 'Could not submit question' });
+  }
+});
+
+app.get('/api/public-questions', async (req, res) => {
+  try {
+    const r = await pool.query(
+      "SELECT id, question, created_at FROM public_questions WHERE status='approved' ORDER BY created_at DESC LIMIT 100"
+    );
+    res.json(r.rows);
+  } catch {
+    res.status(500).json({ error: 'Could not load questions' });
+  }
+});
+
+app.get('/api/admin/public-questions', admin, async (req, res) => {
+  try {
+    const r = await pool.query(
+      "SELECT * FROM public_questions WHERE status='pending' ORDER BY created_at DESC"
+    );
+    res.json(r.rows);
+  } catch {
+    res.status(500).json({ error: 'Could not load pending questions' });
+  }
+});
+
+app.put('/api/admin/public-questions/:id', admin, async (req, res) => {
+  const status = clean(req.body?.status, 20);
+  if (!['approved', 'rejected'].includes(status))
+    return res.status(400).json({ error: 'Invalid status' });
+
+  try {
+    const r = await pool.query(
+      "UPDATE public_questions SET status=$1, reviewed_at=NOW() WHERE id=$2 RETURNING id, status",
+      [status, req.params.id]
+    );
+    if (!r.rowCount) return res.status(404).json({ error: 'Question not found' });
+    res.json({ ok: true, question: r.rows[0] });
+  } catch {
+    res.status(500).json({ error: 'Could not review question' });
+  }
+});
+
+// WEBSITE QUESTIONS: ADMIN MANAGEMENT
+app.get('/api/website-questions', async (req, res) => {
+  try {
+    const r = await pool.query(
+      'SELECT id, question, options FROM website_questions WHERE active=TRUE ORDER BY id DESC'
+    );
+    res.json(r.rows);
+  } catch {
+    res.status(500).json({ error: 'Could not load website questions' });
+  }
+});
+
+app.post('/api/admin/website-questions', admin, async (req, res) => {
+  const question = clean(req.body?.question, 300);
+  const options = Array.isArray(req.body?.options)
+    ? req.body.options.map(x => clean(x, 120)).filter(Boolean)
+    : [];
+  const correct = clean(req.body?.correctAnswer, 120);
+
+  if (!question || options.length < 2 ||
+      new Set(options).size !== options.length || !options.includes(correct))
+    return res.status(400).json({ error: 'Add a question, unique options, and a correct answer' });
+
+  try {
+    const r = await pool.query(
+      'INSERT INTO website_questions(question, options, correct_answer) VALUES($1,$2::jsonb,$3) RETURNING id',
+      [question, JSON.stringify(options), correct]
+    );
+    res.status(201).json({ ok: true, id: r.rows[0].id });
+  } catch {
+    res.status(500).json({ error: 'Could not save question' });
+  }
+});
+
+app.put('/api/admin/website-questions/:id', admin, async (req, res) => {
+  const question = clean(req.body?.question, 300);
+  const options = Array.isArray(req.body?.options)
+    ? req.body.options.map(x => clean(x, 120)).filter(Boolean)
+    : [];
+  const correct = clean(req.body?.correctAnswer, 120);
+
+  if (!question || options.length < 2 ||
+      new Set(options).size !== options.length || !options.includes(correct))
+    return res.status(400).json({ error: 'Invalid question or options' });
+
+  try {
+    const r = await pool.query(
+      'UPDATE website_questions SET question=$1, options=$2::jsonb, correct_answer=$3, updated_at=NOW() WHERE id=$4 RETURNING id',
+      [question, JSON.stringify(options), correct, req.params.id]
+    );
+    if (!r.rowCount) return res.status(404).json({ error: 'Question not found' });
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'Could not update question' });
+  }
+});
+
+app.delete('/api/admin/website-questions/:id', admin, async (req, res) => {
+  try {
+    const r = await pool.query(
+      'UPDATE website_questions SET active=FALSE, updated_at=NOW() WHERE id=$1 RETURNING id',
+      [req.params.id]
+    );
+    if (!r.rowCount) return res.status(404).json({ error: 'Question not found' });
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'Could not delete question' });
+  }
+});
+
+// SAVE WEBSITE QUIZ ANSWERS
+app.post('/api/website-answers', async (req, res) => {
+  const name = clean(req.body?.playerName, 50);
+  const answers = req.body?.answers;
+
+  if (!name || !answers || typeof answers !== 'object' || Array.isArray(answers))
+    return res.status(400).json({ error: 'Enter your name and answers' });
+
+  try {
+    const ids = Object.keys(answers).map(Number);
+    if (!ids.length || ids.some(id => !Number.isSafeInteger(id) || id <= 0))
+      return res.status(400).json({ error: 'Invalid answers' });
+
+    const r = await pool.query(
+      'SELECT id, correct_answer FROM website_questions WHERE active=TRUE AND id=ANY($1::bigint[])',
+      [ids]
+    );
+
+    if (r.rowCount !== ids.length)
+      return res.status(400).json({ error: 'Some questions are unavailable' });
+
+    const correct = new Map(r.rows.map(x => [String(x.id), x.correct_answer]));
+    let score = 0;
+    const saved = {};
+
+    for (const id of ids) {
+      const answer = clean(answers[id], 120);
+      if (!r.rows.some(x => String(x.id) === String(id) &&
+          x.correct_answer === answer)) {
+        saved[id] = answer;
+      } else {
+        saved[id] = answer;
+        score++;
+      }
+    }
+
+    await pool.query(
+      'INSERT INTO website_answers(player_name, answers, score, total) VALUES($1,$2::jsonb,$3,$4)',
+      [name, JSON.stringify(saved), score, ids.length]
+    );
+
+    res.json({ ok: true, score, total: ids.length });
+  } catch {
+    res.status(500).json({ error: 'Could not save answers' });
+  }
+});
+
+app.get('/api/admin/website-answers', admin, async (req, res) => {
+  try {
+    const r = await pool.query(
+      'SELECT id, player_name, score, total, created_at FROM website_answers ORDER BY created_at DESC LIMIT 200'
+    );
+    res.json(r.rows);
+  } catch {
+    res.status(500).json({ error: 'Could not load results' });
+  }
+});
 app.get('/play/:id',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));app.get('/creator-room-7f3c',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));app.get('*',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));app.listen(PORT,()=>console.log(`Real Friend Finder on ${PORT}`));
