@@ -141,6 +141,193 @@ app.delete('/api/admin/website-questions/:id', admin, async (req, res) => {
   }
 });
 
+app.post('/api/friend-quizzes', async (req, res) => {
+  const creatorName = clean(req.body?.creatorName, 50);
+  const questions = Array.isArray(req.body?.questions)
+    ? req.body.questions : [];
+
+  if (!creatorName || ![10, 15].includes(questions.length))
+    return res.status(400).json({ error: 'Name and 10 or 15 questions required' });
+
+  const ids = questions.map(x => Number(x.questionId));
+  if (ids.some(id => !Number.isSafeInteger(id) || id <= 0) ||
+      new Set(ids).size !== ids.length)
+    return res.status(400).json({ error: 'Invalid question selection' });
+
+  const c = await pool.connect();
+  try {
+    const r = await c.query(
+      'SELECT id, question, options FROM website_questions WHERE active=TRUE AND id=ANY($1::bigint[])',
+      [ids]
+    );
+    if (r.rowCount !== ids.length)
+      return res.status(400).json({ error: 'Some questions are unavailable' });
+
+    const byId = new Map(r.rows.map(x => [String(x.id), x]));
+    for (const item of questions) {
+      const q = byId.get(String(Number(item.questionId)));
+      if (!q || !q.options.includes(clean(item.answer, 120)) ||
+          q.options.length < 4)
+        return res.status(400).json({ error: 'Choose a valid answer for every question with at least 4 options' });
+    }
+
+    await c.query('BEGIN');
+    const quizId = rid();
+    await c.query(
+      'INSERT INTO friend_quizzes(id, creator_name) VALUES($1,$2)',
+      [quizId, creatorName]
+    );
+
+    for (let i = 0; i < questions.length; i++) {
+      const item = questions[i];
+      const q = byId.get(String(Number(item.questionId)));
+      await c.query(
+        `INSERT INTO friend_quiz_questions
+         (quiz_id, prompt, options, creator_answer, position)
+         VALUES($1,$2,$3::jsonb,$4,$5)`,
+        [quizId, q.question, JSON.stringify(q.options),
+         clean(item.answer, 120), i + 1]
+      );
+    }
+
+    await c.query('COMMIT');
+    res.status(201).json({
+      id: quizId,
+      shareUrl: `${req.protocol}://${req.get('host')}/friend-quiz/${quizId}`
+    });
+  } catch (e) {
+    await c.query('ROLLBACK');
+    console.error(e);
+    res.status(500).json({ error: 'Could not create quiz' });
+  } finally {
+    c.release();
+  }
+});
+
+app.get('/api/friend-quizzes/:id', async (req, res) => {
+  try {
+    const quiz = await pool.query(
+      'SELECT creator_name FROM friend_quizzes WHERE id=$1',
+      [req.params.id]
+    );
+    if (!quiz.rowCount)
+      return res.status(404).json({ error: 'Quiz not found' });
+
+    const r = await pool.query(
+      `SELECT id, prompt, options FROM friend_quiz_questions
+       WHERE quiz_id=$1 ORDER BY position`,
+      [req.params.id]
+    );
+    res.json({
+      creatorName: quiz.rows[0].creator_name,
+      questions: r.rows
+    });
+  } catch {
+    res.status(500).json({ error: 'Could not load quiz' });
+  }
+});
+
+app.post('/api/friend-quizzes/:id/start', async (req, res) => {
+  const playerName = clean(req.body?.playerName, 50);
+  if (!playerName)
+    return res.status(400).json({ error: 'Enter your name' });
+
+  try {
+    const quiz = await pool.query(
+      'SELECT id FROM friend_quizzes WHERE id=$1',
+      [req.params.id]
+    );
+    if (!quiz.rowCount)
+      return res.status(404).json({ error: 'Quiz not found' });
+
+    const r = await pool.query(
+      `SELECT id, prompt, options, creator_answer
+       FROM friend_quiz_questions WHERE quiz_id=$1 ORDER BY position`,
+      [req.params.id]
+    );
+
+    const questions = r.rows.map(q => ({
+      id: q.id,
+      prompt: q.prompt,
+      options: [
+        q.creator_answer,
+        ...q.options.filter(x => x !== q.creator_answer)
+          .sort(() => Math.random() - 0.5).slice(0, 3)
+      ].sort(() => Math.random() - 0.5)
+    }));
+
+    if (questions.some(q => q.options.length !== 4))
+      return res.status(400).json({ error: 'Every question needs 4 options' });
+
+    const sessionId = rid();
+    await pool.query(
+      'INSERT INTO friend_quiz_sessions(id, quiz_id, question_order) VALUES($1,$2,$3::jsonb)',
+      [sessionId, req.params.id,
+       JSON.stringify(questions.map(q => q.id))]
+    );
+
+    res.json({ sessionId, playerName, questions });
+  } catch {
+    res.status(500).json({ error: 'Could not start quiz' });
+  }
+});
+
+app.post('/api/friend-quiz-sessions/:id/submit', async (req, res) => {
+  const playerName = clean(req.body?.playerName, 50) || 'Guest';
+  const answers = req.body?.answers;
+
+  if (!answers || typeof answers !== 'object' || Array.isArray(answers))
+    return res.status(400).json({ error: 'Invalid answers' });
+
+  const c = await pool.connect();
+  try {
+    const sr = await c.query(
+      'SELECT quiz_id, question_order FROM friend_quiz_sessions WHERE id=$1',
+      [req.params.id]
+    );
+    if (!sr.rowCount)
+      return res.status(404).json({ error: 'Session not found' });
+
+    const order = sr.rows[0].question_order;
+    const r = await c.query(
+      'SELECT id, creator_answer FROM friend_quiz_questions WHERE quiz_id=$1 AND id=ANY($2::bigint[])',
+      [sr.rows[0].quiz_id, order]
+    );
+    if (r.rowCount !== order.length)
+      return res.status(400).json({ error: 'Invalid quiz questions' });
+
+    const correct = new Map(r.rows.map(q => [String(q.id), q.creator_answer]));
+    let score = 0;
+    const saved = {};
+
+    for (const id of order) {
+      const answer = clean(answers[id], 120);
+      if (!correct.has(String(id)) ||
+          (answer && !r.rows.find(q => String(q.id) === String(id)).creator_answer))
+        return res.status(400).json({ error: 'Invalid answer' });
+      saved[id] = answer;
+      if (answer === correct.get(String(id))) score++;
+    }
+
+    await c.query(
+      `INSERT INTO friend_quiz_submissions
+       (session_id, player_name, answers, score, total)
+       VALUES($1,$2,$3::jsonb,$4,$5)`,
+      [req.params.id, playerName, JSON.stringify(saved), score, order.length]
+    );
+
+    res.json({ score, total: order.length });
+  } catch {
+    res.status(500).json({ error: 'Could not save result' });
+  } finally {
+    c.release();
+  }
+});
+
+app.get('/friend-quiz/:id', (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
+);
+    
 // SAVE WEBSITE QUIZ ANSWERS
 app.post('/api/website-answers', async (req, res) => {
   const name = clean(req.body?.playerName, 50);
