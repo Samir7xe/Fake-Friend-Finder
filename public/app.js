@@ -390,8 +390,10 @@ async function loadWebsiteQuestions() {
   const container = $("websiteQuestionList");
   if (!container) return;
 
+  const score = $("websiteScore");
+  score.classList.add("hidden");
+  score.textContent = "";
   container.textContent = "প্রশ্ন লোড হচ্ছে…";
-  $("websiteScore").textContent = "";
 
   try {
     const data = await api("/api/website-questions");
@@ -403,17 +405,42 @@ async function loadWebsiteQuestions() {
         )
       : [];
 
-    if (!state.websiteQuestions.length) {
+    const allQuestions = state.websiteQuestions;
+
+    if (allQuestions.length < 10) {
       container.textContent =
-        "এখনও পর্যাপ্ত অপশনসহ কোনো প্রশ্ন নেই।";
+        `কমপক্ষে ১০টি প্রশ্ন দরকার। এখন আছে ${allQuestions.length}টি।`;
       return;
     }
 
     container.innerHTML = `
+      <style>
+        .teddy-wrap{max-width:480px;margin:18px auto}
+        .teddy-card{
+          position:relative;background:linear-gradient(145deg,#fff1f6,#fff8e9);
+          border:2px solid #efb9cb;border-radius:26px;padding:22px 17px;
+          box-shadow:0 8px 22px #b66d8b22;overflow:hidden
+        }
+        .teddy-ears{font-size:34px;letter-spacing:35px}
+        .teddy-face{font-size:52px;text-align:center;margin:0}
+        .teddy-title{text-align:center;color:#a74d76}
+        .teddy-progress{height:7px;background:#f4d9e4;border-radius:9px;overflow:hidden}
+        .teddy-progress div{height:100%;background:#d879a2;transition:width .2s}
+        .teddy-question{font-size:19px;text-align:center;font-weight:700;margin:20px 0}
+        .teddy-option{
+          display:flex;align-items:center;gap:10px;padding:12px;margin:9px 0;
+          background:#fff;border:1px solid #f0cad8;border-radius:14px
+        }
+        .teddy-option:has(input:checked){background:#ffe4ef;border-color:#ce6591}
+        .teddy-actions{display:flex;gap:10px;margin-top:18px}
+        .teddy-actions button{flex:1;padding:12px;border:0;border-radius:13px;cursor:pointer}
+        .teddy-next{background:#c65e8b;color:white}
+        .teddy-back{background:#f5dce7;color:#813a5a}
+      </style>
+
       <label>
         তোমার নাম
-        <input id="friendCreatorName" maxlength="50"
-          placeholder="নিজের নাম লেখো">
+        <input id="friendCreatorName" maxlength="50" placeholder="নিজের নাম লেখো">
       </label>
 
       <label>
@@ -425,33 +452,45 @@ async function loadWebsiteQuestions() {
       </label>
 
       <p>প্রথমে প্রশ্ন বেছে নাও।</p>
-
       <div id="friendQuestionPicker">
-        ${state.websiteQuestions.map((q, i) => `
-          <label class="question-card">
-            <input type="checkbox" data-friend-pick
-              value="${esc(q.id)}">
+        ${allQuestions.map((q, i) => `
+          <label class="question-card" style="display:block;margin:8px 0">
+            <input type="checkbox" data-friend-pick value="${esc(q.id)}">
             ${i + 1}. ${esc(q.question)}
           </label>
         `).join("")}
       </div>
 
-      <button type="button" id="friendChooseAnswers">
-        নিজের উত্তর বেছে নাও
+      <button type="button" id="friendChooseAnswers" class="glow">
+        নিজের উত্তর বেছে নাও ➜
       </button>
 
       <div id="friendAnswerPicker"></div>
-      <button type="button" id="friendCreateQuiz"
-        class="hidden">
-        কুইজ তৈরি করো
+      <button type="button" id="friendCreateQuiz" class="glow hidden">
+        কুইজ তৈরি করো ♡
       </button>
     `;
 
+    const countSelect = $("friendQuestionCount");
+    const picker = $("friendQuestionPicker");
+
+    function updatePickerLimit() {
+      const count = Number(countSelect.value);
+      const checked = [...picker.querySelectorAll("[data-friend-pick]:checked")];
+
+      picker.querySelectorAll("[data-friend-pick]").forEach(box => {
+        box.disabled = !box.checked && checked.length >= count;
+      });
+    }
+
+    picker.addEventListener("change", updatePickerLimit);
+    countSelect.addEventListener("change", updatePickerLimit);
+
     $("friendChooseAnswers").addEventListener("click", () => {
       const name = $("friendCreatorName").value.trim();
-      const count = Number($("friendQuestionCount").value);
+      const count = Number(countSelect.value);
       const selected = [
-        ...container.querySelectorAll("[data-friend-pick]:checked")
+        ...picker.querySelectorAll("[data-friend-pick]:checked")
       ];
 
       if (!name) return alert("আগে নিজের নাম লেখো।");
@@ -460,69 +499,112 @@ async function loadWebsiteQuestions() {
         return alert(`ঠিক ${count}টি প্রশ্ন বেছে নাও।`);
       }
 
-      const ids = selected.map(el => String(el.value));
-      const questions = ids.map(id =>
-        state.websiteQuestions.find(q => String(q.id) === id)
+      const questions = selected.map(box =>
+        allQuestions.find(q => String(q.id) === String(box.value))
       );
 
-      $("friendAnswerPicker").innerHTML = questions.map((q, i) => `
-        <div class="question-card">
-          <h3>${i + 1}. ${esc(q.question)}</h3>
-          ${q.options.map((option, j) => `
-            <label>
-              <input type="radio"
-                name="friend-answer-${esc(q.id)}"
-                value="${esc(option)}">
-              ${esc(option)}
-            </label>
-          `).join("")}
-        </div>
-      `).join("");
+      if (questions.some(q => !q)) {
+        return alert("প্রশ্ন খুঁজে পাওয়া যায়নি। আবার চেষ্টা করো।");
+      }
 
-      $("friendCreateQuiz").classList.remove("hidden");
+      let current = 0;
+      const answers = {};
 
-      $("friendCreateQuiz").onclick = async () => {
-        const button = $("friendCreateQuiz");
-        const answers = [];
+      const answerPicker = $("friendAnswerPicker");
+      const createButton = $("friendCreateQuiz");
 
-        for (const question of questions) {
-          const answer = container.querySelector(
-            `input[name="friend-answer-${CSS.escape(String(question.id))}"]:checked`
-          );
+      function renderAnswerQuestion() {
+        const q = questions[current];
 
-          if (!answer) {
-            return alert("প্রতিটি প্রশ্নের নিজের উত্তর বেছে নাও।");
+        answerPicker.innerHTML = `
+          <div class="teddy-wrap">
+            <div class="teddy-card">
+              <div class="teddy-ears">🧸</div>
+              <p class="teddy-face">🐻</p>
+              <h3 class="teddy-title">তোমার কুইজ ♡</h3>
+              <div class="teddy-progress">
+                <div style="width:${((current + 1) / questions.length) * 100}%"></div>
+              </div>
+              <p style="text-align:center">প্রশ্ন ${current + 1} / ${questions.length}</p>
+              <div class="teddy-question">${esc(q.question)}</div>
+              ${q.options.map((option, j) => `
+                <label class="teddy-option">
+                  <input type="radio" name="teddy-answer" value="${j}"
+                    ${answers[String(q.id)] === String(option) ? "checked" : ""}>
+                  <span>${esc(option)}</span>
+                </label>
+              `).join("")}
+              <div class="teddy-actions">
+                <button type="button" class="teddy-back" id="teddyBack"
+                  ${current === 0 ? "disabled" : ""}>← আগেরটি</button>
+                <button type="button" class="teddy-next" id="teddyNext">
+                  ${current === questions.length - 1 ? "শেষ ➜" : "পরেরটি ➜"}
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        $("teddyBack").addEventListener("click", () => {
+          const chosen = answerPicker.querySelector('input[name="teddy-answer"]:checked');
+          if (chosen) answers[String(q.id)] = q.options[Number(chosen.value)];
+          if (current > 0) {
+            current--;
+            renderAnswerQuestion();
           }
+        });
 
-          answers.push({
-            questionId: question.id,
-            answer: answer.value
-          });
+        $("teddyNext").addEventListener("click", () => {
+          const chosen = answerPicker.querySelector('input[name="teddy-answer"]:checked');
+
+          if (!chosen) return alert("একটি উত্তর বেছে নাও।");
+
+          answers[String(q.id)] = q.options[Number(chosen.value)];
+
+          if (current < questions.length - 1) {
+            current++;
+            renderAnswerQuestion();
+          } else {
+            createButton.classList.remove("hidden");
+            createButton.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        });
+      }
+
+      createButton.classList.add("hidden");
+      renderAnswerQuestion();
+
+      createButton.onclick = async () => {
+        if (questions.some(q => answers[String(q.id)] === undefined)) {
+          return alert("সব প্রশ্নের উত্তর বেছে নাও।");
         }
 
-        button.disabled = true;
+        createButton.disabled = true;
 
         try {
           const result = await api("/api/friend-quizzes", {
             method: "POST",
             body: JSON.stringify({
               creatorName: name,
-              questions: answers
+              questions: questions.map(q => ({
+                questionId: q.id,
+                answer: answers[String(q.id)]
+              }))
             })
           });
 
-          const score = $("websiteScore");
           score.classList.remove("hidden");
           score.textContent = "";
 
           const heading = document.createElement("p");
-          heading.textContent = "🎉 তোমার কুইজ তৈরি হয়েছে!";
+          heading.textContent = `🎉 ${name}, তোমার কুইজ তৈরি হয়েছে!`;
           score.appendChild(heading);
 
           const link = document.createElement("a");
           link.href = result.shareUrl;
           link.textContent = result.shareUrl;
           link.style.display = "block";
+          link.style.overflowWrap = "anywhere";
           score.appendChild(link);
 
           const copy = document.createElement("button");
@@ -539,10 +621,11 @@ async function loadWebsiteQuestions() {
           };
 
           score.appendChild(copy);
+          score.scrollIntoView({ behavior: "smooth", block: "center" });
         } catch (error) {
           alert(fail(error));
         } finally {
-          button.disabled = false;
+          createButton.disabled = false;
         }
       };
     });
