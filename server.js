@@ -385,13 +385,30 @@ app.get('/api/admin/website-answers', admin, async (req, res) => {
     res.status(500).json({ error: 'Could not load results' });
   }
 });
-app.get('/play/:id',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));app.get('/creator-room-7f3c',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));app.get('*',(q,s)=>s.sendFile(path.join(__dirname,'public','index.html')));const fs = require('fs');
+const fs = require('fs');
 
-pool.query(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'))
-  .then(() => {
-    app.listen(PORT, () => console.log(`Real Friend Finder on ${PORT}`));
-  })
-  .catch(err => {
-    console.error('Database setup failed:', err.message);
-    process.exit(1);
-  });
+// Render-এর port scan যেন আটকে না থাকে, তাই আগে server চালু হবে।
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Real Friend Finder on ${PORT}`);
+
+  // Server চালুর পরে database schema তৈরি হবে।
+  pool.query(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'))
+    .then(() => console.log('Database schema ready'))
+    .catch(err => console.error('Database setup failed:', err.message));
+});
+
+app.get('/play/:id', (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
+);
+
+app.get('/friend-quiz/:id', (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
+);
+
+app.get('/creator-room-7f3c', (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
+);
+
+app.get('*', (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
+);
