@@ -384,70 +384,172 @@ async function submitPlay() {
   }
 }
 
-/* WEBSITE QUESTIONS */
+/* WEBSITE QUESTIONS — FRIEND QUIZ CREATOR */
 
 async function loadWebsiteQuestions() {
   const container = $("websiteQuestionList");
   if (!container) return;
 
   container.textContent = "প্রশ্ন লোড হচ্ছে…";
+  $("websiteScore").textContent = "";
 
   try {
     const data = await api("/api/website-questions");
-    state.websiteQuestions = Array.isArray(data) ? data : [];
+    state.websiteQuestions = Array.isArray(data)
+      ? data.filter(q =>
+          q.active !== false &&
+          Array.isArray(q.options) &&
+          q.options.length >= 4
+        )
+      : [];
 
     if (!state.websiteQuestions.length) {
-      container.textContent = "এখনও কোনো প্রশ্ন যোগ করা হয়নি।";
+      container.textContent =
+        "এখনও পর্যাপ্ত অপশনসহ কোনো প্রশ্ন নেই।";
       return;
     }
 
-    container.innerHTML = state.websiteQuestions.map((q, i) => `
-      <div class="question-card">
-        <h3>${i + 1}. ${esc(q.question)}</h3>
-        ${(Array.isArray(q.options) ? q.options : []).map(option => `
-          <label>
-            <input type="radio" name="web-${esc(q.id)}"
-              value="${esc(option)}">
-            ${esc(option)}
+    container.innerHTML = `
+      <label>
+        তোমার নাম
+        <input id="friendCreatorName" maxlength="50"
+          placeholder="নিজের নাম লেখো">
+      </label>
+
+      <label>
+        কতটি প্রশ্ন থাকবে?
+        <select id="friendQuestionCount">
+          <option value="10">১০টি প্রশ্ন</option>
+          <option value="15">১৫টি প্রশ্ন</option>
+        </select>
+      </label>
+
+      <p>প্রথমে প্রশ্ন বেছে নাও।</p>
+
+      <div id="friendQuestionPicker">
+        ${state.websiteQuestions.map((q, i) => `
+          <label class="question-card">
+            <input type="checkbox" data-friend-pick
+              value="${esc(q.id)}">
+            ${i + 1}. ${esc(q.question)}
           </label>
         `).join("")}
       </div>
-    `).join("");
+
+      <button type="button" id="friendChooseAnswers">
+        নিজের উত্তর বেছে নাও
+      </button>
+
+      <div id="friendAnswerPicker"></div>
+      <button type="button" id="friendCreateQuiz"
+        class="hidden">
+        কুইজ তৈরি করো
+      </button>
+    `;
+
+    $("friendChooseAnswers").addEventListener("click", () => {
+      const name = $("friendCreatorName").value.trim();
+      const count = Number($("friendQuestionCount").value);
+      const selected = [
+        ...container.querySelectorAll("[data-friend-pick]:checked")
+      ];
+
+      if (!name) return alert("আগে নিজের নাম লেখো।");
+
+      if (selected.length !== count) {
+        return alert(`ঠিক ${count}টি প্রশ্ন বেছে নাও।`);
+      }
+
+      const ids = selected.map(el => String(el.value));
+      const questions = ids.map(id =>
+        state.websiteQuestions.find(q => String(q.id) === id)
+      );
+
+      $("friendAnswerPicker").innerHTML = questions.map((q, i) => `
+        <div class="question-card">
+          <h3>${i + 1}. ${esc(q.question)}</h3>
+          ${q.options.map((option, j) => `
+            <label>
+              <input type="radio"
+                name="friend-answer-${esc(q.id)}"
+                value="${esc(option)}">
+              ${esc(option)}
+            </label>
+          `).join("")}
+        </div>
+      `).join("");
+
+      $("friendCreateQuiz").classList.remove("hidden");
+
+      $("friendCreateQuiz").onclick = async () => {
+        const button = $("friendCreateQuiz");
+        const answers = [];
+
+        for (const question of questions) {
+          const answer = container.querySelector(
+            `input[name="friend-answer-${CSS.escape(String(question.id))}"]:checked`
+          );
+
+          if (!answer) {
+            return alert("প্রতিটি প্রশ্নের নিজের উত্তর বেছে নাও।");
+          }
+
+          answers.push({
+            questionId: question.id,
+            answer: answer.value
+          });
+        }
+
+        button.disabled = true;
+
+        try {
+          const result = await api("/api/friend-quizzes", {
+            method: "POST",
+            body: JSON.stringify({
+              creatorName: name,
+              questions: answers
+            })
+          });
+
+          const score = $("websiteScore");
+          score.classList.remove("hidden");
+          score.textContent = "";
+
+          const heading = document.createElement("p");
+          heading.textContent = "🎉 তোমার কুইজ তৈরি হয়েছে!";
+          score.appendChild(heading);
+
+          const link = document.createElement("a");
+          link.href = result.shareUrl;
+          link.textContent = result.shareUrl;
+          link.style.display = "block";
+          score.appendChild(link);
+
+          const copy = document.createElement("button");
+          copy.type = "button";
+          copy.textContent = "লিংক কপি করো";
+
+          copy.onclick = async () => {
+            try {
+              await navigator.clipboard.writeText(result.shareUrl);
+              alert("লিংক কপি হয়েছে!");
+            } catch {
+              prompt("লিংক কপি করো:", result.shareUrl);
+            }
+          };
+
+          score.appendChild(copy);
+        } catch (error) {
+          alert(fail(error));
+        } finally {
+          button.disabled = false;
+        }
+      };
+    });
   } catch (error) {
     container.textContent = fail(error);
   }
 }
-
-$("submitWebsiteAnswers")?.addEventListener("click", async () => {
-  const playerName = $("websitePlayerName").value.trim();
-
-  if (!playerName) return alert("তোমার নাম লিখো।");
-  if (!state.websiteQuestions.length) {
-    return alert("প্রশ্ন উপলভ্য নেই।");
-  }
-
-  const answers = {};
-
-  for (const q of state.websiteQuestions) {
-    const selected = document.querySelector(
-      `input[name="web-${CSS.escape(String(q.id))}"]:checked`
-    );
-
-    if (!selected) return alert("সব প্রশ্নের উত্তর দাও।");
-    answers[q.id] = selected.value;
-  }
-
-  try {
-    const result = await api("/api/website-answers", {
-      method: "POST",
-      body: JSON.stringify({ playerName, answers })
-    });
-
-    msg("websiteScore", `তোমার স্কোর: ${result.score}/${result.total}`);
-  } catch (error) {
-    msg("websiteScore", fail(error), true);
-  }
-});
 
 /* PUBLIC QUESTIONS */
 
