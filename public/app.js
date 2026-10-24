@@ -1076,7 +1076,6 @@ $("musicToggle")?.addEventListener("click", async () => {
 
 async function loadFriendQuiz(id) {
   let quiz;
-
   try {
     quiz = await api(`/api/friend-quizzes/${encodeURIComponent(id)}`);
   } catch (error) {
@@ -1086,7 +1085,6 @@ async function loadFriendQuiz(id) {
   }
 
   let view = $("friendPlayView");
-
   if (!view) {
     view = document.createElement("section");
     view.id = "friendPlayView";
@@ -1101,34 +1099,26 @@ async function loadFriendQuiz(id) {
     <button type="button" id="friendPlayHome">হোমে ফিরুন</button>
   `;
 
-  $("friendPlayTitle").textContent =
-    `তুমি ${quiz.creatorName}-কে কতটা চেনো?`;
-
+  $("friendPlayTitle").textContent = `তুমি ${quiz.creatorName}-কে কতটা চেনো?`;
   $("friendPlayHome").onclick = () => show("home");
 
   const content = $("friendPlayContent");
   const resultBox = $("friendPlayResult");
 
   content.innerHTML = `
-    <label>
-      তোমার নাম
-      <input id="friendPlayerName" maxlength="50"
-        placeholder="নিজের নাম লেখো">
+    <label>তোমার নাম
+      <input id="friendPlayerName" maxlength="50" placeholder="নিজের নাম লেখো">
     </label>
-    <button type="button" id="friendStartButton">
-      কুইজ শুরু করো
-    </button>
+    <button type="button" id="friendStartButton">কুইজ শুরু করো</button>
   `;
-
   show("friendPlayView");
 
   $("friendStartButton").onclick = async () => {
     const playerName = $("friendPlayerName").value.trim();
-
     if (!playerName) return alert("আগে নিজের নাম লেখো।");
 
-    const button = $("friendStartButton");
-    button.disabled = true;
+    const startButton = $("friendStartButton");
+    startButton.disabled = true;
 
     try {
       const game = await api(
@@ -1139,69 +1129,91 @@ async function loadFriendQuiz(id) {
         }
       );
 
-      content.innerHTML = `
-        <p>সব প্রশ্নের উত্তর বেছে নাও।</p>
-        <div id="friendPlayQuestions"></div>
-        <button type="button" id="friendSubmitButton">
-          উত্তর জমা দাও
-        </button>
-      `;
+      if (!game.questions || !game.questions.length) {
+        alert("এই কুইজে কোনো প্রশ্ন পাওয়া যায়নি।");
+        startButton.disabled = false;
+        return;
+      }
 
-      const questionsBox = $("friendPlayQuestions");
+      let currentIndex = 0;
+      const answers = {};
 
-      questionsBox.innerHTML = game.questions.map((q, i) => `
-        <div class="question-card">
-          <h3>${i + 1}. ${esc(q.prompt)}</h3>
-          ${q.options.map(option => `
-            <label>
-              <input type="radio"
-                name="friend-answer-${esc(q.id)}"
-                value="${esc(option)}">
-              ${esc(option)}
-            </label>
-          `).join("")}
-        </div>
-      `).join("");
+      function renderQuestion() {
+        const q = game.questions[currentIndex];
 
-      $("friendSubmitButton").onclick = async () => {
-        const answers = {};
+        content.innerHTML = `
+          <p>প্রশ্ন ${currentIndex + 1} / ${game.questions.length}</p>
+          <div class="question-card">
+            <h3>${currentIndex + 1}. ${esc(q.prompt)}</h3>
+            ${q.options.map(option => `
+              <label>
+                <input type="radio"
+                  name="friend-answer"
+                  value="${esc(option)}"
+                  ${answers[q.id] === option ? "checked" : ""}>
+                ${esc(option)}
+              </label>
+            `).join("")}
+          </div>
+          <button type="button" id="friendBackButton"
+            ${currentIndex === 0 ? "disabled" : ""}>← পেছনে</button>
+          <button type="button" id="friendNextButton">
+            ${currentIndex === game.questions.length - 1 ? "উত্তর জমা দাও" : "পরের প্রশ্ন →"}
+          </button>
+        `;
 
-        for (const q of game.questions) {
-          const selected = questionsBox.querySelector(
-            `input[name="friend-answer-${CSS.escape(String(q.id))}"]:checked`
+        content.querySelectorAll('input[name="friend-answer"]').forEach(input => {
+          input.onchange = () => { answers[q.id] = input.value; };
+        });
+
+        $("friendBackButton").onclick = () => {
+          if (currentIndex > 0) {
+            currentIndex--;
+            renderQuestion();
+          }
+        };
+
+        $("friendNextButton").onclick = async () => {
+          const selected = content.querySelector(
+            'input[name="friend-answer"]:checked'
           );
+          if (selected) answers[q.id] = selected.value;
 
-          if (!selected) {
-            return alert("সব প্রশ্নের উত্তর দাও।");
+          if (answers[q.id] === undefined) {
+            return alert("আগে একটি উত্তর বেছে নাও।");
           }
 
-          answers[q.id] = selected.value;
-        }
+          if (currentIndex < game.questions.length - 1) {
+            currentIndex++;
+            renderQuestion();
+            return;
+          }
 
-        const submitButton = $("friendSubmitButton");
-        submitButton.disabled = true;
-
-        try {
-          const score = await api(
-            `/api/friend-quiz-sessions/${encodeURIComponent(game.sessionId)}/submit`,
-            {
-              method: "POST",
-              body: JSON.stringify({ playerName, answers })
-            }
-          );
-
-          resultBox.textContent =
-            `তোমার স্কোর: ${score.score}/${score.total}`;
-
+          const submitButton = $("friendNextButton");
           submitButton.disabled = true;
-        } catch (error) {
-          alert(fail(error));
-          submitButton.disabled = false;
-        }
-      };
+
+          try {
+            const score = await api(
+              `/api/friend-quiz-sessions/${encodeURIComponent(game.sessionId)}/submit`,
+              {
+                method: "POST",
+                body: JSON.stringify({ playerName, answers })
+              }
+            );
+
+            resultBox.textContent = `তোমার স্কোর: ${score.score}/${score.total}`;
+            content.innerHTML = `<p>কুইজ সম্পূর্ণ হয়েছে!</p>`;
+          } catch (error) {
+            alert(fail(error));
+            submitButton.disabled = false;
+          }
+        };
+      }
+
+      renderQuestion();
     } catch (error) {
       alert(fail(error));
-      button.disabled = false;
+      startButton.disabled = false;
     }
   };
 }
