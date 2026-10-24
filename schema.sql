@@ -31,3 +31,34 @@ CREATE TABLE IF NOT EXISTS website_answers (
     total INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE TABLE IF NOT EXISTS friend_quizzes (
+  id TEXT PRIMARY KEY,
+  creator_name TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS friend_quiz_questions (
+  id BIGSERIAL PRIMARY KEY,
+  quiz_id TEXT NOT NULL REFERENCES friend_quizzes(id) ON DELETE CASCADE,
+  prompt TEXT NOT NULL,
+  options JSONB NOT NULL,
+  creator_answer TEXT NOT NULL,
+  position INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS friend_quiz_sessions (
+  id TEXT PRIMARY KEY,
+  quiz_id TEXT NOT NULL REFERENCES friend_quizzes(id) ON DELETE CASCADE,
+  question_order JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS friend_quiz_submissions (
+  id BIGSERIAL PRIMARY KEY,
+  session_id TEXT NOT NULL REFERENCES friend_quiz_sessions(id) ON DELETE CASCADE,
+  player_name TEXT NOT NULL,
+  answers JSONB NOT NULL,
+  score INTEGER NOT NULL,
+  total INTEGER NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
