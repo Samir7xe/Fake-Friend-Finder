@@ -88,3 +88,86 @@ button:focus-visible {
     transition: none !important;
   }
 }
+
+/* BRIGHT CUTE THEME - NO PURPLE */
+:root {
+  --cute-pink: #ff70b7;
+  --cute-yellow: #ffdf62;
+  --cute-blue: #73dcff;
+  --cute-white: #ffffff;
+  --cute-shadow: #d94d91;
+}
+button,
+input[type="button"],
+input[type="submit"] {
+  color: #553044 !important;
+  background: linear-gradient(135deg, #fff5a8 0%, #ffacd3 48%, #9beaff 100%) !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 20px !important;
+  box-shadow: 0 6px 0 #e77eaf,
+              0 10px 22px rgba(255, 105, 180, .35),
+              inset 0 2px 3px rgba(255,255,255,.95) !important;
+  text-shadow: none !important;
+  font-weight: 800;
+  min-height: 48px;
+  animation: cuteButtonGlow 2.4s ease-in-out infinite alternate;
+}
+button:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover {
+  filter: brightness(1.08) saturate(1.15);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 9px 0 #e77eaf,
+              0 15px 28px rgba(115,220,255,.48),
+              inset 0 2px 4px #ffffff !important;
+}
+button:active,
+input[type="button"]:active,
+input[type="submit"]:active {
+  transform: translateY(4px) scale(.97);
+  box-shadow: 0 2px 0 #e77eaf,
+              0 4px 10px rgba(255,105,180,.28),
+              inset 0 3px 6px rgba(255,255,255,.7) !important;
+  animation: none;
+}
+.question-card {
+  background: linear-gradient(145deg, #fff9fb, #e8faff 60%, #fff4b9) !important;
+  color: #553044;
+  border: 2px solid #ffffff !important;
+  border-radius: 24px !important;
+  box-shadow: 0 9px 0 #f2a7cb,
+              0 16px 28px rgba(90,160,190,.22),
+              inset 0 2px 4px #ffffff !important;
+}
+.question-card h3 {
+  background: linear-gradient(135deg, #ffdfed, #d9f7ff, #fff5b9) !important;
+  color: #553044 !important;
+  border: 1px solid #ffffff;
+  box-shadow: 0 5px 12px rgba(240,125,180,.2) !important;
+}
+.question-card label {
+  color: #553044 !important;
+  background: linear-gradient(135deg, #ffffff, #ffe2ef 50%, #d9f7ff) !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 18px !important;
+  box-shadow: 0 5px 0 #a9dff0,
+              0 8px 16px rgba(255,112,183,.18),
+              inset 0 2px 3px #ffffff !important;
+}
+.question-card label:has(input:checked) {
+  background: linear-gradient(135deg, #ffb4d8, #fff0a0, #9beaff) !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 5px 0 #ee91bd,
+              0 0 22px rgba(255,112,183,.48),
+              inset 0 2px 4px #ffffff !important;
+  transform: translateY(-3px) scale(1.01);
+}
+@keyframes cuteButtonGlow {
+  from { filter: drop-shadow(0 0 1px rgba(255,112,183,.15)); }
+  to { filter: drop-shadow(0 0 7px rgba(115,220,255,.45)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  button, input[type="button"], input[type="submit"] {
+    animation: none !important;
+  }
+}

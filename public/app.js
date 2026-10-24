@@ -1250,3 +1250,89 @@ async function initializeApp() {
 initializeApp().catch(error => {
   console.error("App initialization error:", error);
 });
+
+/* GLOBAL CUTE MUSIC CONTROL */
+(() => {
+  function setupGlobalMusic() {
+    const audio = document.getElementById("bgMusic");
+    if (!audio) return;
+
+    audio.loop = true;
+    audio.preload = "auto";
+
+    const oldToggle = document.getElementById("musicToggle");
+    if (oldToggle) oldToggle.style.display = "none";
+
+    let control = document.getElementById("globalMusicControl");
+    if (!control) {
+      control = document.createElement("button");
+      control.id = "globalMusicControl";
+      control.type = "button";
+      control.setAttribute("aria-label", "Music on or off");
+      control.textContent = "🎵 Music On";
+      document.body.appendChild(control);
+    }
+
+    Object.assign(control.style, {
+      position: "fixed",
+      left: "14px",
+      bottom: "18px",
+      zIndex: "99999",
+      minWidth: "125px",
+      minHeight: "52px",
+      padding: "12px 16px",
+      borderRadius: "22px",
+      border: "2px solid white",
+      color: "#66364d",
+      background: "linear-gradient(135deg,#fff2a6,#ffacd3,#9beaff)",
+      boxShadow: "0 6px 0 #e77eaf,0 0 20px #ffacd3",
+      fontSize: "15px",
+      fontWeight: "800",
+      cursor: "pointer",
+      transition: "transform .16s, box-shadow .16s"
+    });
+
+    const refreshLabel = () => {
+      control.textContent = audio.paused ? "🎵 Music On" : "🎵 Music Off";
+    };
+
+    control.addEventListener("click", async () => {
+      if (audio.paused) {
+        try {
+          await audio.play();
+        } catch (error) {
+          control.textContent = "Tap to play 🎵";
+        }
+      } else {
+        audio.pause();
+      }
+      refreshLabel();
+    });
+
+    audio.addEventListener("play", refreshLabel);
+    audio.addEventListener("pause", refreshLabel);
+
+    document.addEventListener("pointerdown", () => {
+      if (audio.paused && !window.__musicUserPaused) {
+        audio.play().then(refreshLabel).catch(() => {});
+      }
+    }, { once: true });
+
+    audio.addEventListener("pause", () => {
+      window.__musicUserPaused = true;
+    });
+    control.addEventListener("click", () => {
+      window.__musicUserPaused = audio.paused;
+    });
+
+    audio.play().then(refreshLabel).catch(() => {
+      control.textContent = "Tap to play 🎵";
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupGlobalMusic, { once: true });
+  } else {
+    setupGlobalMusic();
+  }
+})();
