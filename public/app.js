@@ -859,26 +859,16 @@ async function loadAdminWebsiteQuestions() {
 
 /* ADD WEBSITE QUESTION */
 
-function renderWebsiteOptions(options = ["", ""]) {
+function renderWebsiteOptions(options = ["", "", "", ""]) {
   const container = $("newWebsiteOptions");
   if (!container) return;
 
-  container.innerHTML = `
-    ${options.map((option, i) => `
-      <label>অপশন ${i + 1}
-        <input data-new-option="${i}" value="${esc(option)}" maxlength="120">
-      </label>
-    `).join("")}
-
-    <label>সঠিক উত্তর
-      <select id="newCorrect">
-        <option value="">সঠিক উত্তর বেছে নাও</option>
-        ${options.filter(x => x.trim()).map(x =>
-          `<option value="${esc(x)}">${esc(x)}</option>`
-        ).join("")}
-      </select>
+  container.innerHTML = options.map((option, i) => `
+    <label>অপশন ${i + 1}
+      <input data-new-option="${i}"
+        value="${esc(option)}" maxlength="120">
     </label>
-  `;
+  `).join("");
 }
 
 renderWebsiteOptions();
@@ -899,15 +889,21 @@ $("addWebsiteQuestion")?.addEventListener("click", () => {
 
 $("saveWebsiteQuestion")?.addEventListener("click", async () => {
   const question = $("newWebsiteQuestion").value.trim();
+
   const options = [
     ...$("newWebsiteOptions").querySelectorAll("[data-new-option]")
   ].map(el => el.value.trim()).filter(Boolean);
-  const correctAnswer = $("newCorrect")?.value || "";
 
-  if (!question || options.length < 2 ||
-      new Set(options).size !== options.length ||
-      !correctAnswer || !options.includes(correctAnswer)) {
-    return msg("websiteAdminMessage", "প্রশ্ন, আলাদা অপশন ও সঠিক উত্তর দিন।", true);
+  if (
+    !question ||
+    options.length < 4 ||
+    new Set(options).size !== options.length
+  ) {
+    return msg(
+      "websiteAdminMessage",
+      "প্রশ্ন এবং অন্তত ৪টি আলাদা অপশন দিন।",
+      true
+    );
   }
 
   const button = $("saveWebsiteQuestion");
@@ -916,11 +912,16 @@ $("saveWebsiteQuestion")?.addEventListener("click", async () => {
   try {
     await api("/api/admin/website-questions", {
       method: "POST",
-      body: JSON.stringify({ question, options, correctAnswer })
+      body: JSON.stringify({
+        question,
+        options,
+        correctAnswer: options[0]
+      })
     });
 
     $("newWebsiteQuestion").value = "";
-    renderWebsiteOptions(["", ""]);
+    renderWebsiteOptions(["", "", "", ""]);
+
     msg("websiteAdminMessage", "প্রশ্ন সফলভাবে যোগ হয়েছে।");
 
     await loadAdminWebsiteQuestions();
@@ -988,9 +989,152 @@ $("musicToggle")?.addEventListener("click", async () => {
   }
 });
 
+/* FRIEND QUIZ PLAY */
+
+async function loadFriendQuiz(id) {
+  let quiz;
+
+  try {
+    quiz = await api(`/api/friend-quizzes/${encodeURIComponent(id)}`);
+  } catch (error) {
+    alert(fail(error));
+    show("home");
+    return;
+  }
+
+  let view = $("friendPlayView");
+
+  if (!view) {
+    view = document.createElement("section");
+    view.id = "friendPlayView";
+    view.className = "view hidden";
+    document.body.appendChild(view);
+  }
+
+  view.innerHTML = `
+    <h2 id="friendPlayTitle"></h2>
+    <div id="friendPlayContent"></div>
+    <p id="friendPlayResult"></p>
+    <button type="button" id="friendPlayHome">হোমে ফিরুন</button>
+  `;
+
+  $("friendPlayTitle").textContent =
+    `তুমি ${quiz.creatorName}-কে কতটা চেনো?`;
+
+  $("friendPlayHome").onclick = () => show("home");
+
+  const content = $("friendPlayContent");
+  const resultBox = $("friendPlayResult");
+
+  content.innerHTML = `
+    <label>
+      তোমার নাম
+      <input id="friendPlayerName" maxlength="50"
+        placeholder="নিজের নাম লেখো">
+    </label>
+    <button type="button" id="friendStartButton">
+      কুইজ শুরু করো
+    </button>
+  `;
+
+  show("friendPlayView");
+
+  $("friendStartButton").onclick = async () => {
+    const playerName = $("friendPlayerName").value.trim();
+
+    if (!playerName) return alert("আগে নিজের নাম লেখো।");
+
+    const button = $("friendStartButton");
+    button.disabled = true;
+
+    try {
+      const game = await api(
+        `/api/friend-quizzes/${encodeURIComponent(id)}/start`,
+        {
+          method: "POST",
+          body: JSON.stringify({ playerName })
+        }
+      );
+
+      content.innerHTML = `
+        <p>সব প্রশ্নের উত্তর বেছে নাও।</p>
+        <div id="friendPlayQuestions"></div>
+        <button type="button" id="friendSubmitButton">
+          উত্তর জমা দাও
+        </button>
+      `;
+
+      const questionsBox = $("friendPlayQuestions");
+
+      questionsBox.innerHTML = game.questions.map((q, i) => `
+        <div class="question-card">
+          <h3>${i + 1}. ${esc(q.prompt)}</h3>
+          ${q.options.map(option => `
+            <label>
+              <input type="radio"
+                name="friend-answer-${esc(q.id)}"
+                value="${esc(option)}">
+              ${esc(option)}
+            </label>
+          `).join("")}
+        </div>
+      `).join("");
+
+      $("friendSubmitButton").onclick = async () => {
+        const answers = {};
+
+        for (const q of game.questions) {
+          const selected = questionsBox.querySelector(
+            `input[name="friend-answer-${CSS.escape(String(q.id))}"]:checked`
+          );
+
+          if (!selected) {
+            return alert("সব প্রশ্নের উত্তর দাও।");
+          }
+
+          answers[q.id] = selected.value;
+        }
+
+        const submitButton = $("friendSubmitButton");
+        submitButton.disabled = true;
+
+        try {
+          const score = await api(
+            `/api/friend-quiz-sessions/${encodeURIComponent(game.sessionId)}/submit`,
+            {
+              method: "POST",
+              body: JSON.stringify({ playerName, answers })
+            }
+          );
+
+          resultBox.textContent =
+            `তোমার স্কোর: ${score.score}/${score.total}`;
+
+          submitButton.disabled = true;
+        } catch (error) {
+          alert(fail(error));
+          submitButton.disabled = false;
+        }
+      };
+    } catch (error) {
+      alert(fail(error));
+      button.disabled = false;
+    }
+  };
+}
+
 /* INITIALIZE */
 
 async function initializeApp() {
+  const friendMatch = location.pathname.match(
+    /^\/friend-quiz\/([^/]+)$/
+  );
+
+  if (friendMatch) {
+    await loadFriendQuiz(decodeURIComponent(friendMatch[1]));
+    return;
+  }
+
   await Promise.all([loadProfile(), loadPublicQuestions()]);
 
   if (location.pathname === "/creator-room-7f3c") {
