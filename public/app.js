@@ -580,14 +580,29 @@ if (count !== 10 && count !== 15) {
         });
       }
 
-      async function advance() {
-        if (current < questions.length - 1) {
-          current++;
-          renderQuestion();
-        } else {
-          await createQuiz();
-        }
-      }
+      
+async function advance() {
+  const allAnswered = questions.every(q =>
+    typeof answers[String(q.id)] === "string" &&
+    answers[String(q.id)].trim() !== ""
+  );
+
+  if (allAnswered) {
+    await createQuiz();
+    return;
+  }
+
+  for (let step = 1; step <= questions.length; step++) {
+    const next = (current + step) % questions.length;
+    const answer = answers[String(questions[next].id)];
+
+    if (typeof answer !== "string" || answer.trim() === "") {
+      current = next;
+      renderQuestion();
+      return;
+    }
+  }
+}
 
       async function createQuiz() {
         if (creating) return;
@@ -1195,11 +1210,15 @@ async function loadFriendQuiz(id) {
       }
 
       function nextUnanswered(fromIndex = currentIndex) {
-        for (let step = 1; step <= questions.length; step++) {
-          const index = (fromIndex + step) % questions.length;
-          if (answers[questions[index].id] === undefined) return index;
-        }
-        return -1;
+  for (let step = 1; step <= questions.length; step++) {
+    const index = (fromIndex + step) % questions.length;
+    const answer = answers[questions[index].id];
+
+    if (answer === undefined || answer === "") {
+      return index;
+    }
+  }
+  return -1;
       }
 
       function renderQuestion() {
@@ -1214,17 +1233,16 @@ async function loadFriendQuiz(id) {
           </div>
           <div class="friend-nav">
             <button type="button" id="friendBackButton" class="back" ${history.length ? "" : "disabled"}>Back</button>
-            <button type="button" id="friendIgnoreButton" class="glow pale">Ignore</button>
           </div>`;
 
         content.querySelectorAll("[data-answer-index]").forEach(button => {
           button.onclick = async () => {
-            if (submitBusy) return;
-            answers[q.id] = q.options[Number(button.dataset.answerIndex)];
-            history.push(currentIndex);
-            if (Object.keys(answers).length === questions.length) {
-              await submitAnswers();
-              return;
+            if (questions.every(question =>
+  typeof answers[question.id] === "string" &&
+  answers[question.id] !== ""
+)) {
+  await submitAnswers();
+  return;
             }
             const next = nextUnanswered(currentIndex);
             if (next >= 0) currentIndex = next;
@@ -1238,22 +1256,16 @@ async function loadFriendQuiz(id) {
           renderQuestion();
         };
 
-        $("friendIgnoreButton").onclick = async () => {
-  if (submitBusy) return;
+              }
 
-  answers[q.id] = "";
-  history.push(currentIndex);
+      renderQuestion();
+    } catch (error) {
+      alert(fail(error));
+      startButton.disabled = false;
+    }
+  };
+}
 
-  if (Object.keys(answers).length === questions.length) {
-    await submitAnswers();
-    return;
-  }
-
-  const next = nextUnanswered(currentIndex);
-  if (next >= 0) currentIndex = next;
-
-  renderQuestion();
-};
       }
 
       renderQuestion();
