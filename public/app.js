@@ -1135,78 +1135,78 @@ async function loadFriendQuiz(id) {
         return;
       }
 
-      let currentIndex = 0;
+      const questions = game.questions;
       const answers = {};
+      const history = [];
+      let currentIndex = 0;
+      let submitBusy = false;
+
+      async function submitAnswers() {
+        if (submitBusy) return;
+        submitBusy = true;
+        try {
+          const score = await api(
+            `/api/friend-quiz-sessions/${encodeURIComponent(game.sessionId)}/submit`,
+            { method: "POST", body: JSON.stringify({ playerName, answers }) }
+          );
+          resultBox.textContent = `তোমার স্কোর: ${score.score}/${score.total}`;
+          content.innerHTML = `<div class="question-card"><h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3><p>তোমার স্কোর: ${score.score}/${score.total}</p></div>`;
+        } catch (error) {
+          alert(fail(error));
+          submitBusy = false;
+          renderQuestion();
+        }
+      }
+
+      function nextUnanswered(fromIndex = currentIndex) {
+        for (let step = 1; step <= questions.length; step++) {
+          const index = (fromIndex + step) % questions.length;
+          if (answers[questions[index].id] === undefined) return index;
+        }
+        return -1;
+      }
 
       function renderQuestion() {
-        const q = game.questions[currentIndex];
-
+        const q = questions[currentIndex];
         content.innerHTML = `
-          <p>প্রশ্ন ${currentIndex + 1} / ${game.questions.length}</p>
+          <p class="muted">প্রশ্ন ${Object.keys(answers).length + 1} / ${questions.length}</p>
           <div class="question-card">
-            <h3>${currentIndex + 1}. ${esc(q.prompt)}</h3>
-            ${q.options.map(option => `
-              <label>
-                <input type="radio"
-                  name="friend-answer"
-                  value="${esc(option)}"
-                  ${answers[q.id] === option ? "checked" : ""}>
-                ${esc(option)}
-              </label>
-            `).join("")}
+            <h3>${esc(q.prompt)}</h3>
+            <div class="friend-answer-list">
+              ${q.options.map((option, i) => `<button type="button" class="answer-choice ${answers[q.id] === option ? "selected" : ""}" data-answer-index="${i}">${esc(option)}</button>`).join("")}
+            </div>
           </div>
-          <button type="button" id="friendBackButton"
-            ${currentIndex === 0 ? "disabled" : ""}>← পেছনে</button>
-          <button type="button" id="friendNextButton">
-            ${currentIndex === game.questions.length - 1 ? "উত্তর জমা দাও" : "পরের প্রশ্ন →"}
-          </button>
-        `;
+          <div class="friend-nav">
+            <button type="button" id="friendBackButton" class="back" ${history.length ? "" : "disabled"}>Back</button>
+            <button type="button" id="friendIgnoreButton" class="glow pale">Ignore</button>
+          </div>`;
 
-        content.querySelectorAll('input[name="friend-answer"]').forEach(input => {
-          input.onchange = () => { answers[q.id] = input.value; };
+        content.querySelectorAll("[data-answer-index]").forEach(button => {
+          button.onclick = async () => {
+            if (submitBusy) return;
+            answers[q.id] = q.options[Number(button.dataset.answerIndex)];
+            history.push(currentIndex);
+            if (Object.keys(answers).length === questions.length) {
+              await submitAnswers();
+              return;
+            }
+            const next = nextUnanswered(currentIndex);
+            if (next >= 0) currentIndex = next;
+            renderQuestion();
+          };
         });
 
         $("friendBackButton").onclick = () => {
-          if (currentIndex > 0) {
-            currentIndex--;
-            renderQuestion();
-          }
+          if (!history.length) return;
+          currentIndex = history.pop();
+          renderQuestion();
         };
 
-        $("friendNextButton").onclick = async () => {
-          const selected = content.querySelector(
-            'input[name="friend-answer"]:checked'
-          );
-          if (selected) answers[q.id] = selected.value;
-
-          if (answers[q.id] === undefined) {
-            return alert("আগে একটি উত্তর বেছে নাও।");
-          }
-
-          if (currentIndex < game.questions.length - 1) {
-            currentIndex++;
-            renderQuestion();
-            return;
-          }
-
-          const submitButton = $("friendNextButton");
-          submitButton.disabled = true;
-
-          try {
-            const score = await api(
-              `/api/friend-quiz-sessions/${encodeURIComponent(game.sessionId)}/submit`,
-              {
-                method: "POST",
-                body: JSON.stringify({ playerName, answers })
-              }
-            );
-
-            resultBox.textContent = `তোমার স্কোর: ${score.score}/${score.total}`;
-            content.innerHTML = `<p>কুইজ সম্পূর্ণ হয়েছে!</p>`;
-          } catch (error) {
-            alert(fail(error));
-            submitButton.disabled = false;
-          }
+        $("friendIgnoreButton").onclick = () => {
+          history.push(currentIndex);
+          const next = nextUnanswered(currentIndex);
+          if (next >= 0) currentIndex = next;
+          renderQuestion();
         };
       }
 
