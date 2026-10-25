@@ -408,10 +408,10 @@ async function loadWebsiteQuestions() {
 
     const allQuestions = state.websiteQuestions;
 
-    if (allQuestions.length < 10) {
-      container.textContent =
-        `কমপক্ষে ১০টি প্রশ্ন দরকার। এখন আছে ${allQuestions.length}টি।`;
-      return;
+    if (allQuestions.length < count) {
+  container.textContent =
+    `কমপক্ষে ${count}টি প্রশ্ন দরকার। এখন আছে ${allQuestions.length}টি।`;
+  return;
     }
 
     container.innerHTML = `
