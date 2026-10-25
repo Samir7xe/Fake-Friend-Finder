@@ -146,33 +146,50 @@ app.post('/api/friend-quizzes', async (req, res) => {
   const questions = Array.isArray(req.body?.questions)
     ? req.body.questions : [];
 
-  if (!creatorName || questions.length !== 10)
-    return res.status(400).json({ error: 'Name and exactly 10 questions required' });
+  if (!creatorName || ![10, 15].includes(questions.length))
+    return res.status(400).json({
+      error: 'Name and 10 or 15 questions required'
+    });
 
   const ids = questions.map(x => Number(x.questionId));
+
   if (ids.some(id => !Number.isSafeInteger(id) || id <= 0) ||
       new Set(ids).size !== ids.length)
     return res.status(400).json({ error: 'Invalid question selection' });
 
   const c = await pool.connect();
+
   try {
     const r = await c.query(
-      'SELECT id, question, options FROM website_questions WHERE active=TRUE AND id=ANY($1::bigint[])',
+      `SELECT id, question, options
+       FROM website_questions
+       WHERE active = TRUE AND id = ANY($1::bigint[])`,
       [ids]
     );
-    if (r.rowCount !== ids.length)
-      return res.status(400).json({ error: 'Some questions are unavailable' });
 
-    const byId = new Map(r.rows.map(x => [String(x.id), x]));
+    if (r.rowCount !== ids.length)
+      return res.status(400).json({
+        error: 'Some questions are unavailable'
+      });
+
+    const byId = new Map(r.rows.map(q => [String(q.id), q]));
+
     for (const item of questions) {
       const q = byId.get(String(Number(item.questionId)));
-      if (!q || !q.options.includes(clean(item.answer, 120)) ||
-          q.options.length < 4)
-        return res.status(400).json({ error: 'Choose a valid answer for every question with at least 4 options' });
+      const answer = clean(item.answer, 120);
+
+      if (!q || !Array.isArray(q.options) || q.options.length < 4 ||
+          (answer && !q.options.includes(answer))) {
+        return res.status(400).json({
+          error: 'Invalid question or answer'
+        });
+      }
     }
 
     await c.query('BEGIN');
+
     const quizId = rid();
+
     await c.query(
       'INSERT INTO friend_quizzes(id, creator_name) VALUES($1,$2)',
       [quizId, creatorName]
@@ -181,16 +198,23 @@ app.post('/api/friend-quizzes', async (req, res) => {
     for (let i = 0; i < questions.length; i++) {
       const item = questions[i];
       const q = byId.get(String(Number(item.questionId)));
+
       await c.query(
         `INSERT INTO friend_quiz_questions
          (quiz_id, prompt, options, creator_answer, position)
          VALUES($1,$2,$3::jsonb,$4,$5)`,
-        [quizId, q.question, JSON.stringify(q.options),
-         clean(item.answer, 120), i + 1]
+        [
+          quizId,
+          q.question,
+          JSON.stringify(q.options),
+          clean(item.answer, 120),
+          i + 1
+        ]
       );
     }
 
     await c.query('COMMIT');
+
     res.status(201).json({
       id: quizId,
       shareUrl: `${req.protocol}://${req.get('host')}/friend-quiz/${quizId}`
@@ -237,37 +261,58 @@ app.post('/api/friend-quizzes/:id/start', async (req, res) => {
       'SELECT id FROM friend_quizzes WHERE id=$1',
       [req.params.id]
     );
+
     if (!quiz.rowCount)
       return res.status(404).json({ error: 'Quiz not found' });
 
     const r = await pool.query(
       `SELECT id, prompt, options, creator_answer
-       FROM friend_quiz_questions WHERE quiz_id=$1 ORDER BY position`,
+       FROM friend_quiz_questions
+       WHERE quiz_id=$1 ORDER BY position`,
       [req.params.id]
     );
 
-    const questions = r.rows.map(q => ({
-      id: q.id,
-      prompt: q.prompt,
-      options: [
-        q.creator_answer,
-        ...q.options.filter(x => x !== q.creator_answer)
-          .sort(() => Math.random() - 0.5).slice(0, 3)
-      ].sort(() => Math.random() - 0.5)
-    }));
+    const questions = r.rows.map(q => {
+      const options = Array.isArray(q.options) ? q.options : [];
+      const answer = clean(q.creator_answer, 120);
+
+      const distractors = options
+        .filter(x => x !== answer)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
+
+      const choices = answer
+        ? [answer, ...distractors]
+        : [...options].sort(() => Math.random() - 0.5).slice(0, 4);
+
+      return {
+        id: q.id,
+        prompt: q.prompt,
+        options: choices.sort(() => Math.random() - 0.5)
+      };
+    });
 
     if (questions.some(q => q.options.length !== 4))
-      return res.status(400).json({ error: 'Every question needs 4 options' });
+      return res.status(400).json({
+        error: 'Every question needs 4 valid options'
+      });
 
     const sessionId = rid();
+
     await pool.query(
-      'INSERT INTO friend_quiz_sessions(id, quiz_id, question_order) VALUES($1,$2,$3::jsonb)',
-      [sessionId, req.params.id,
-       JSON.stringify(questions.map(q => q.id))]
+      `INSERT INTO friend_quiz_sessions
+       (id, quiz_id, question_order)
+       VALUES($1,$2,$3::jsonb)`,
+      [
+        sessionId,
+        req.params.id,
+        JSON.stringify(questions.map(q => q.id))
+      ]
     );
 
     res.json({ sessionId, playerName, questions });
-  } catch {
+  } catch (e) {
+    console.error(e);
     res.status(500).json({ error: 'Could not start quiz' });
   }
 });
