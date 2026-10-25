@@ -408,9 +408,9 @@ async function loadWebsiteQuestions() {
 
     const allQuestions = state.websiteQuestions;
 
-    if (allQuestions.length < 15) {
+    if (allQuestions.length < 10) {
       container.textContent =
-        `কমপক্ষে ১৫টি প্রশ্ন দরকার। এখন আছে ${allQuestions.length}টি।`;
+        `কমপক্ষে ১০টি প্রশ্ন দরকার। এখন আছে ${allQuestions.length}টি।`;
       return;
     }
 
