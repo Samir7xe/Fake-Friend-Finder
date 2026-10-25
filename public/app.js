@@ -517,12 +517,8 @@ if (count !== 10 && count !== 15) {
 
       function renderQuestion() {
         const q = questions[current];
-
-        const options = q._friendQuizOptions ||
-  (q._friendQuizOptions = [...q.options]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 4));
-
+        const options = q.options;
+        
         area.innerHTML = `
           <div style="margin-top:28px">
             <div class="ff-progress">
