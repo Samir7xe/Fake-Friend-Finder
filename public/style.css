@@ -204,3 +204,88 @@ input,textarea,select{border:2px solid var(--pink)!important;border-radius:14px!
 .bubble{background:var(--pink)!important;color:var(--black)!important;border:3px solid #fff!important}
 .cute-decor{text-align:center;font-size:32px;padding:12px;border:2px dashed var(--pink);border-radius:20px;background:#fff}
 @media(max-width:480px){main{padding:12px}.panel{padding:16px}}
+/* Cute talking teddy decorations */
+.teddy-row {
+  display: flex;
+    justify-content: center;
+      align-items: center;
+        gap: 18px;
+          flex-wrap: wrap;
+          }
+
+          .talking-teddy {
+            position: relative;
+              display: inline-flex;
+                font-size: 58px;
+                  padding: 8px;
+                    animation: teddyFloat 2.5s ease-in-out infinite;
+                    }
+
+                    .talking-teddy:nth-child(even) {
+                      animation-delay: 0.5s;
+                      }
+
+                      .talking-teddy small {
+                        position: absolute;
+                          top: -5px;
+                            right: -12px;
+                              background: #fff3a8;
+                                color: #111;
+                                  border: 2px solid #111;
+                                    border-radius: 14px;
+                                      padding: 4px 7px;
+                                        font-size: 11px;
+                                          font-weight: bold;
+                                            white-space: nowrap;
+                                            }
+
+                                            .teddy-speech {
+                                              display: inline-block;
+                                                background: #fff;
+                                                  color: #111;
+                                                    border: 2px solid #8bdcff;
+                                                      border-radius: 18px;
+                                                        padding: 10px 14px;
+                                                          font-weight: bold;
+                                                            text-align: center;
+                                                            }
+
+                                                            @keyframes teddyFloat {
+                                                              0%, 100% { transform: translateY(0); }
+                                                                50% { transform: translateY(-6px); }
+                                                                }
+
+                                                                /* One-tap quiz answers */
+                                                                .friend-answer-list {
+                                                                  display: grid;
+                                                                    gap: 12px;
+                                                                      margin: 18px 0;
+                                                                      }
+
+                                                                      .answer-choice {
+                                                                        width: 100%;
+                                                                          text-align: left;
+                                                                            border: 2px solid #8bdcff;
+                                                                              border-radius: 18px;
+                                                                                padding: 14px 16px;
+                                                                                  background: #fff;
+                                                                                    color: #111;
+                                                                                      cursor: pointer;
+                                                                                      }
+
+                                                                                      .answer-choice:active,
+                                                                                      .answer-choice.selected {
+                                                                                        background: #ffc6dc;
+                                                                                          border-color: #111;
+                                                                                          }
+
+                                                                                          .friend-nav {
+                                                                                            display: flex;
+                                                                                              justify-content: space-between;
+                                                                                                gap: 12px;
+                                                                                                  margin-top: 16px;
+                                                                                                  }
+
+                                                                                                  .friend-nav button {
+                                                                                                    flex: 1;
+                                                                                                    }
