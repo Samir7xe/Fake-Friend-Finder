@@ -515,9 +515,10 @@ async function loadWebsiteQuestions() {
       function renderQuestion() {
         const q = questions[current];
 
-        const options = [...q.options]
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 4);
+        const options = q._friendQuizOptions ||
+  (q._friendQuizOptions = [...q.options]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 4));
 
         area.innerHTML = `
           <div style="margin-top:28px">
@@ -533,7 +534,7 @@ async function loadWebsiteQuestions() {
 
             <div class="ff-options">
               ${options.map((option, i) => `
-                <button type="button" class="ff-option"
+                <button type="button" class="ff-option ${answers[String(q.id)] === option ? "selected" : ""}"
                   data-ff-answer="${i}">
                   ${esc(option)}
                 </button>
