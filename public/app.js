@@ -408,12 +408,6 @@ async function loadWebsiteQuestions() {
 
     const allQuestions = state.websiteQuestions;
 
-    if (allQuestions.length < count) {
-  container.textContent =
-    `কমপক্ষে ${count}টি প্রশ্ন দরকার। এখন আছে ${allQuestions.length}টি।`;
-  return;
-    }
-
     container.innerHTML = `
       <style>
         .ff-wrap{max-width:520px;margin:22px auto}
@@ -499,6 +493,10 @@ if (count !== 10 && count !== 15) {
   alert("১০ অথবা ১৫টি প্রশ্ন বেছে নাও।");
   return;
           }
+      if (allQuestions.length < count) {
+  alert(`কমপক্ষে ${count}টি প্রশ্ন দরকার। এখন আছে ${allQuestions.length}টি।`);
+  return;
+      }
       if (!name) {
         alert("আগে নিজের নাম লেখো।");
         return;
@@ -1232,26 +1230,29 @@ async function loadFriendQuiz(id) {
           </div>`;
 
         content.querySelectorAll("[data-answer-index]").forEach(button => {
-          button.onclick = async () => {
-            if (questions.every(question =>
-  typeof answers[question.id] === "string" &&
-  answers[question.id] !== ""
-)) {
-  await submitAnswers();
-  return;
-            }
-            const next = nextUnanswered(currentIndex);
-            if (next >= 0) currentIndex = next;
-            renderQuestion();
-          };
-        });
+  button.onclick = async () => {
+    if (submitBusy) return;
 
-        $("friendBackButton").onclick = () => {
-          if (!history.length) return;
-          currentIndex = history.pop();
-          renderQuestion();
-        };
+    answers[q.id] = q.options[Number(button.dataset.answerIndex)];
+    history.push(currentIndex);
 
+    const next = nextUnanswered(currentIndex);
+
+    if (next === -1) {
+      await submitAnswers();
+      return;
+    }
+
+    currentIndex = next;
+    renderQuestion();
+  };
+});
+
+$("friendBackButton").onclick = () => {
+  if (!history.length) return;
+  currentIndex = history.pop();
+  renderQuestion();
+};
               }
 
       renderQuestion();
