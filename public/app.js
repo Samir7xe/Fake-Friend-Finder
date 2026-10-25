@@ -94,8 +94,8 @@ $("build")?.addEventListener("click", () => {
 
   const count = Number($("count").value);
 
-  if (!Number.isInteger(count) || count < 20 || count > 30) {
-    alert("২০ থেকে ৩০টি প্রশ্ন বেছে নাও।");
+  if (!Number.isInteger(count) || count < 1 || count > 100) {
+    alert("১ থেকে ১০০টি প্রশ্ন বেছে নাও।");
     return;
   }
 
@@ -198,8 +198,8 @@ function renderEditor() {
 }
 
 $("addQuestion")?.addEventListener("click", () => {
-  if (state.customQuestions.length >= 30) {
-    alert("সর্বোচ্চ ৩০টি প্রশ্ন রাখা যাবে।");
+  if (state.customQuestions.length >= 100) {
+    alert("সর্বোচ্চ ১০০টি প্রশ্ন রাখা যাবে।");
     return;
   }
 

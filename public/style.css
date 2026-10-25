@@ -191,3 +191,16 @@ input,textarea,select{border:2px solid #ffb8d4;border-radius:14px;background:#ff
 .teddy-next{background:var(--yellow)!important;border-color:#f1c72e!important}
 .teddy-back{background:var(--sky)!important;border-color:#4bbbe9!important}
 @media(max-width:480px){main{padding:12px}.panel{padding:16px}.teddy-card{padding:14px}}
+
+/* Real Friend Finder theme */
+:root{--pink:#ff8fbd;--white:#fff;--yellow:#ffe56b;--sky:#83d9ff;--black:#17171c}
+body{background:#fff8fb!important;color:var(--black)!important}
+.top,.panel,.question-card{background:#fff!important;color:var(--black)!important}
+button,.glow,.back{background:var(--yellow)!important;color:var(--black)!important;border:3px solid var(--pink)!important;border-radius:18px!important;box-shadow:0 0 0 2px #fff,0 0 14px #ff8fbd88!important;font-weight:800}
+button:active{background:#e7a4c3!important;transform:scale(.98)}
+.glow.pale,.back{background:var(--sky)!important;border-color:var(--sky)!important}
+input,textarea,select{border:2px solid var(--pink)!important;border-radius:14px!important}
+.panel,.question-card{border:2px solid var(--pink)!important;border-radius:22px!important}
+.bubble{background:var(--pink)!important;color:var(--black)!important;border:3px solid #fff!important}
+.cute-decor{text-align:center;font-size:32px;padding:12px;border:2px dashed var(--pink);border-radius:20px;background:#fff}
+@media(max-width:480px){main{padding:12px}.panel{padding:16px}}
