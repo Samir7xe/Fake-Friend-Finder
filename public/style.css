@@ -376,3 +376,52 @@ input,textarea,select{border:2px solid var(--pink)!important;border-radius:14px!
     grid-template-columns: 1fr;
   }
 }
+/* Friend Quiz Play */
+#friendPlayView .question-card h3 {
+  text-align: center;
+  font-size: clamp(24px, 5vw, 34px);
+  line-height: 1.6;
+  padding: 24px 16px;
+  margin: 16px 0;
+}
+
+#friendPlayView .friend-answer-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 22px 0;
+}
+
+#friendPlayView .answer-choice {
+  min-height: 70px;
+  padding: 14px;
+  background: linear-gradient(135deg, #ffe56b, #ffb8d4);
+  border: 3px solid #ff8fbd;
+  border-radius: 18px;
+  color: #17171c;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+#friendPlayView .answer-choice:nth-child(2) {
+  background: linear-gradient(135deg, #83d9ff, #c9b8ff);
+}
+
+#friendPlayView .answer-choice:nth-child(3) {
+  background: linear-gradient(135deg, #b8f5c5, #83d9ff);
+}
+
+#friendPlayView .answer-choice:nth-child(4) {
+  background: linear-gradient(135deg, #ffc6dc, #fff0a0);
+}
+
+#friendPlayView .answer-choice.selected {
+  outline: 3px solid #7545c8;
+  outline-offset: 2px;
+}
+
+@media (max-width: 420px) {
+  #friendPlayView .friend-answer-list {
+    grid-template-columns: 1fr;
+  }
+}
