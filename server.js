@@ -369,10 +369,6 @@ app.post('/api/friend-quiz-sessions/:id/submit', async (req, res) => {
   }
 });
 
-app.get('/friend-quiz/:id', (req, res) =>
-  res.sendFile(path.join(__dirname, 'public', 'index.html'))
-);
-    
 // SAVE WEBSITE QUIZ ANSWERS
 app.post('/api/website-answers', async (req, res) => {
   const name = clean(req.body?.playerName, 50);
