@@ -495,7 +495,10 @@ async function loadWebsiteQuestions() {
     startButton.addEventListener("click", () => {
       const name = $("friendCreatorName").value.trim();
       const count = Number($("friendQuestionCount").value);
-
+if (count !== 10 && count !== 15) {
+  alert("১০ অথবা ১৫টি প্রশ্ন বেছে নাও।");
+  return;
+          }
       if (!name) {
         alert("আগে নিজের নাম লেখো।");
         return;
@@ -1235,12 +1238,22 @@ async function loadFriendQuiz(id) {
           renderQuestion();
         };
 
-        $("friendIgnoreButton").onclick = () => {
-          history.push(currentIndex);
-          const next = nextUnanswered(currentIndex);
-          if (next >= 0) currentIndex = next;
-          renderQuestion();
-        };
+        $("friendIgnoreButton").onclick = async () => {
+  if (submitBusy) return;
+
+  answers[q.id] = "";
+  history.push(currentIndex);
+
+  if (Object.keys(answers).length === questions.length) {
+    await submitAnswers();
+    return;
+  }
+
+  const next = nextUnanswered(currentIndex);
+  if (next >= 0) currentIndex = next;
+
+  renderQuestion();
+};
       }
 
       renderQuestion();
