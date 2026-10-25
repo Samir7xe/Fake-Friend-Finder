@@ -1263,16 +1263,6 @@ $("friendBackButton").onclick = () => {
   };
 }
 
-      }
-
-      renderQuestion();
-    } catch (error) {
-      alert(fail(error));
-      startButton.disabled = false;
-    }
-  };
-}
-
 /* INITIALIZE */
 
 async function initializeApp() {
