@@ -1081,6 +1081,16 @@ async function loadAdminWebsiteAnswers() {
   }
 }
 
+/* ADMIN BUTTON WIRING */
+
+$("loadQuizzes")?.addEventListener("click", async () => {
+  await loadAdminQuizzes();
+});
+
+$("loadWebsiteAnswers")?.addEventListener("click", async () => {
+  await loadAdminWebsiteAnswers();
+});
+
 /* LOGOUT */
 
 $("logout")?.addEventListener("click", async () => {
