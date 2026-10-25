@@ -171,3 +171,23 @@ input[type="submit"]:active {
     animation: none !important;
   }
 }
+
+/* Real Friend Finder theme */
+:root{--pink:#ff8fbd;--white:#fff;--yellow:#ffe56b;--sky:#83d9ff;--black:#17171c}
+body{background:#fff8fb;color:var(--black)}
+.top,.panel{background:#fff}
+.bubble{background:var(--pink)!important;color:var(--black)!important;border:3px solid var(--white)!important;box-shadow:0 0 0 3px var(--pink),0 0 16px #ff8fbd99!important}
+button,.glow{box-shadow:none;border:3px solid var(--pink);border-radius:16px;background:var(--yellow);color:var(--black);font-weight:800}
+button:active,.glow:active{background:#e7a4c3;transform:scale(.98)}
+.glow.pale{background:var(--sky);border-color:#4bbbe9}
+.back{background:var(--sky)!important;border-color:#4bbbe9!important;color:var(--black)!important}
+input,textarea,select{border:2px solid #ffb8d4;border-radius:14px;background:#fff;color:var(--black)}
+.question-card{background:#fff;border:2px solid var(--pink);border-radius:18px}
+.teddy-card{background:#fff;border:3px solid var(--pink);border-radius:24px;box-shadow:0 0 18px #ff8fbd77}
+.teddy-option{display:flex;align-items:center;padding:14px;margin:10px 0;background:#fff;border:3px solid var(--sky);border-radius:18px;box-shadow:0 0 10px #83d9ff66;cursor:pointer}
+.teddy-option:has(input:checked){background:#ffb8d4;border-color:#e34f91}
+.teddy-actions{display:flex;justify-content:space-between;gap:12px}
+.teddy-actions button{flex:0 1 44%;min-height:44px}
+.teddy-next{background:var(--yellow)!important;border-color:#f1c72e!important}
+.teddy-back{background:var(--sky)!important;border-color:#4bbbe9!important}
+@media(max-width:480px){main{padding:12px}.panel{padding:16px}.teddy-card{padding:14px}}
