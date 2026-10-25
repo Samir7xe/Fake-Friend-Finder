@@ -289,3 +289,90 @@ input,textarea,select{border:2px solid var(--pink)!important;border-radius:14px!
                                                                                                   .friend-nav button {
                                                                                                     flex: 1;
                                                                                                     }
+/* Friend Quiz Creator */
+.ff-question {
+  text-align: center;
+  font-size: clamp(24px, 5vw, 36px);
+  font-weight: 900;
+  line-height: 1.6;
+  margin: 24px 0;
+  padding: 22px;
+  background: #fff;
+  border: 3px solid #ff8fbd;
+  border-radius: 24px;
+}
+
+.ff-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 24px 0;
+}
+
+.ff-option {
+  min-height: 75px;
+  padding: 14px;
+  font-size: 16px;
+  background: linear-gradient(135deg, #ffe56b, #ffb8d4) !important;
+  border: 3px solid #ff8fbd !important;
+  border-radius: 20px !important;
+  color: #17171c !important;
+}
+
+.ff-option:nth-child(2) {
+  background: linear-gradient(135deg, #83d9ff, #c9b8ff) !important;
+}
+
+.ff-option:nth-child(3) {
+  background: linear-gradient(135deg, #b8f5c5, #83d9ff) !important;
+}
+
+.ff-option:nth-child(4) {
+  background: linear-gradient(135deg, #ffc6dc, #fff0a0) !important;
+}
+
+.ff-option.selected {
+  outline: 4px solid #7545c8;
+  outline-offset: 2px;
+  transform: scale(1.02);
+}
+
+.ff-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.ff-btn {
+  flex: 1;
+  padding: 13px;
+}
+
+.ff-back {
+  background: #83d9ff !important;
+}
+
+.ff-ignore {
+  background: #ffe56b !important;
+}
+
+.ff-progress {
+  height: 10px;
+  overflow: hidden;
+  background: #ffe1ed;
+  border-radius: 20px;
+}
+
+.ff-progress > div {
+  height: 100%;
+  background: linear-gradient(90deg, #ff70b7, #83d9ff);
+  border-radius: 20px;
+  transition: width .2s ease;
+}
+
+@media (max-width: 420px) {
+  .ff-options {
+    grid-template-columns: 1fr;
+  }
+}
