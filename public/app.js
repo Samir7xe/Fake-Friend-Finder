@@ -625,33 +625,122 @@ async function advance() {
           }
 
           area.innerHTML = `
-            <div style="margin-top:30px;text-align:center">
-              <h3 style="color:#e0c5ff">🎉 তোমার বন্ধুদের শেয়ার করো..!! ☺️</h3>
-              <button type="button" class="ff-share" id="ffShare">
-                Share ↗
-              </button>
-            </div>
-          `;
+  <div style="margin-top:30px;text-align:center">
+    <h3 style="color:#e0c5ff">🎉 তোমার বন্ধুদের শেয়ার করো..!! ☺️</h3>
+    <div class="ff-share-layout">
+      <div class="ff-share-side">🐻</div>
+      <div class="ff-share-main">
+        <button type="button" class="ff-share" id="ffShare" aria-label="Share">
+          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <path d="M8.7 10.5 15.3 6.5M8.7 13.5l6.6 4"/>
+          </svg>
+        </button>
+        <div class="ff-share-options">
+          <button type="button" id="ffCopyLink">📋 Copy Link</button>
+          <button type="button" id="ffWhatsApp">🟢 WhatsApp</button>
+          <button type="button" id="ffFacebook">🔵 Facebook</button>
+          <button type="button" id="ffMessenger">💬 Messenger</button>
+          <button type="button" id="ffTelegram">✈️ Telegram</button>
+          <button type="button" id="ffInstagram">📸 Instagram</button>
+        </div>
+      </div>
+      <div class="ff-share-side">🐼</div>
+    </div>
+  </div>
+`;
+          const shareUrl = result.shareUrl;
+          const shareTitle = `${name}-এর Friend Quiz`;
+          const shareText = "আমার Friend Quiz খেলো!";
+
+          $("ffCopyLink").addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(shareUrl);
+              alert("লিংক কপি হয়েছে!");
+            } catch {
+              prompt("লিংক কপি করো:", shareUrl);
+            }
+          });
+
+          $("ffWhatsApp").addEventListener("click", () => {
+            window.open(
+              `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`,
+              "_blank"
+            );
+          });
+
+          $("ffFacebook").addEventListener("click", () => {
+            window.open(
+              `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+              "_blank"
+            );
+          });
+
+          $("ffMessenger").addEventListener("click", async () => {
+            if (navigator.share) {
+              try {
+                await navigator.share({
+                  title: shareTitle,
+                  text: shareText,
+                  url: shareUrl
+                });
+              } catch (error) {
+                if (error.name !== "AbortError") {
+                  alert("শেয়ার করা যায়নি।");
+                }
+              }
+            } else {
+              prompt("লিংক কপি করে Messenger-এ পাঠাও:", shareUrl);
+            }
+          });
+
+          $("ffTelegram").addEventListener("click", () => {
+            window.open(
+              `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`,
+              "_blank"
+            );
+          });
+
+          $("ffInstagram").addEventListener("click", async () => {
+            try {
+              if (navigator.share) {
+                await navigator.share({
+                  title: shareTitle,
+                  text: shareText,
+                  url: shareUrl
+                });
+              } else {
+                await navigator.clipboard.writeText(shareUrl);
+                alert("লিংক কপি হয়েছে! Instagram-এ গিয়ে শেয়ার করো।");
+              }
+            } catch (error) {
+              if (error.name !== "AbortError") {
+                prompt("লিংক কপি করে Instagram-এ শেয়ার করো:", shareUrl);
+              }
+            }
+          });
 
           $("ffShare").addEventListener("click", async () => {
-            if (typeof navigator.share !== "function") {
-              alert("এই ডিভাইসে Share অপশনটি উপলব্ধ নেই।");
+            if (!navigator.share) {
+              alert("নিচের অপশন থেকে শেয়ার করো।");
               return;
             }
 
             try {
               await navigator.share({
-                title: `${name}-এর Friend Quiz`,
-                text: "আমার Friend Quiz খেলো!",
-                url: result.shareUrl
+                title: shareTitle,
+                text: shareText,
+                url: shareUrl
               });
             } catch (error) {
               if (error.name !== "AbortError") {
-                alert("শেয়ার করা যায়নি। আবার চেষ্টা করো।");
+                alert("শেয়ার করা যায়নি।");
               }
             }
           });
-
+          
           score.classList.add("hidden");
           score.textContent = "";
           area.scrollIntoView({ behavior: "smooth", block: "center" });
