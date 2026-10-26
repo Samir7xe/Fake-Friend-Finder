@@ -471,3 +471,62 @@ input,textarea,select{border:2px solid var(--pink)!important;border-radius:14px!
 .ff-ignore:active {
   background: #ffe56b !important;
 }
+/* Friend Finder share section */
+.ff-share-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.ff-share-side {
+  flex: 1;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(48px, 12vw, 90px);
+}
+
+.ff-share-main {
+  flex: 2;
+  min-width: 0;
+  text-align: center;
+}
+
+.ff-share-main .ff-share {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  font-size: 28px;
+}
+
+.ff-share-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ff-share-options button {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 5px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 360px) {
+  .ff-share-layout {
+    gap: 3px;
+  }
+
+  .ff-share-side {
+    font-size: 43px;
+  }
+
+  .ff-share-options {
+    grid-template-columns: 1fr;
+  }
+}
