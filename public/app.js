@@ -489,14 +489,10 @@ async function loadWebsiteQuestions() {
     startButton.addEventListener("click", () => {
       const name = $("friendCreatorName").value.trim();
       const count = Number($("friendQuestionCount").value);
-if (count !== 10 && count !== 15) {
-  alert("১০ অথবা ১৫টি প্রশ্ন বেছে নাও।");
+if (!allQuestions.length) {
+  alert("প্রশ্নভান্ডারে কোনো প্রশ্ন নেই।");
   return;
-          }
-      if (allQuestions.length < count) {
-  alert(`কমপক্ষে ${count}টি প্রশ্ন দরকার। এখন আছে ${allQuestions.length}টি।`);
-  return;
-      }
+}
       if (!name) {
         alert("আগে নিজের নাম লেখো।");
         return;
