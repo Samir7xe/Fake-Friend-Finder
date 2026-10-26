@@ -287,9 +287,14 @@ app.post('/api/friend-quizzes/:id/start', async (req, res) => {
         return {
           id: q.id,
           prompt: q.prompt
-            .replace(/আমার/g, creatorName + "-র")
-            .replace(/আমি/g, creatorName)
-            .replace(/পছন্দ করি/g, "পছন্দ করে"),
+            .replace(/আমার/g, creatorName + "-এর")
+            .replace(/আমি(?=\s|[?!।,.]|$)/g, creatorName)
+            .replace(/পছন্দ করি/g, "পছন্দ করে")
+            .replace(/বসি/g, "বসে")
+            .replace(/যাই/g, "যায়")
+            .replace(/খাই/g, "খায়")
+            .replace(/করি/g, "করে")
+            .replace(/থাকি/g, "থাকে"),
           options: choices.sort(() => Math.random() - 0.5)
         };
       });
