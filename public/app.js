@@ -626,7 +626,7 @@ async function advance() {
 
           area.innerHTML = `
             <div style="margin-top:30px;text-align:center">
-              <h3 style="color:#e0c5ff">🎉 তোমার কুইজ তৈরি!</h3>
+              <h3 style="color:#e0c5ff">🎉 তোমার বন্ধুদের শেয়ার করো..!! ☺️</h3>
               <button type="button" class="ff-share" id="ffShare">
                 Share ↗
               </button>
