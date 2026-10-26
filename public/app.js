@@ -679,22 +679,13 @@ async function advance() {
           });
 
           $("ffMessenger").addEventListener("click", async () => {
-            if (navigator.share) {
-              try {
-                await navigator.share({
-                  title: shareTitle,
-                  text: shareText,
-                  url: shareUrl
-                });
-              } catch (error) {
-                if (error.name !== "AbortError") {
-                  alert("শেয়ার করা যায়নি।");
-                }
-              }
-            } else {
-              prompt("লিংক কপি করে Messenger-এ পাঠাও:", shareUrl);
-            }
-          });
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+  } catch {}
+
+  window.location.href =
+    "fb-messenger://share/?link=" + encodeURIComponent(shareUrl);
+});
 
           $("ffTelegram").addEventListener("click", () => {
             window.open(
@@ -704,23 +695,14 @@ async function advance() {
           });
 
           $("ffInstagram").addEventListener("click", async () => {
-            try {
-              if (navigator.share) {
-                await navigator.share({
-                  title: shareTitle,
-                  text: shareText,
-                  url: shareUrl
-                });
-              } else {
-                await navigator.clipboard.writeText(shareUrl);
-                alert("লিংক কপি হয়েছে! Instagram-এ গিয়ে শেয়ার করো।");
-              }
-            } catch (error) {
-              if (error.name !== "AbortError") {
-                prompt("লিংক কপি করে Instagram-এ শেয়ার করো:", shareUrl);
-              }
-            }
-          });
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+  } catch {
+    prompt("লিংক কপি করো:", shareUrl);
+  }
+
+  window.location.href = "instagram://direct-inbox";
+});
 
           $("ffShare").addEventListener("click", async () => {
             if (!navigator.share) {
