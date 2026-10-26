@@ -83,6 +83,17 @@ app.get('/api/website-questions', async (req, res) => {
   }
 });
 
+app.get('/api/admin/website-questions', admin, async (req, res) => {
+  try {
+    const r = await pool.query(
+      'SELECT id, question, options, correct_answer FROM website_questions WHERE active=TRUE ORDER BY id DESC'
+    );
+    res.json(r.rows);
+  } catch {
+    res.status(500).json({ error: 'Could not load admin website questions' });
+  }
+});
+
 app.post('/api/admin/website-questions', admin, async (req, res) => {
   const question = clean(req.body?.question, 300);
   const options = Array.isArray(req.body?.options)
