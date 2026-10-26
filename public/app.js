@@ -1132,7 +1132,7 @@ $("musicToggle")?.addEventListener("click", async () => {
 async function loadFriendQuiz(id) {
   let quiz;
   try {
-    quiz = await api(`/api/friend-quizzes/${encodeURIComponent(id)}`);
+  quiz = await api(`/api/friend-quizzes/${encodeURIComponent(id)}`);
   } catch (error) {
     alert(fail(error));
     show("home");
