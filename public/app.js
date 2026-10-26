@@ -1030,7 +1030,6 @@ async function loadAdminWebsiteQuestions() {
       <div class="question-card" style="margin-bottom:14px">
         <p><strong>${esc(q.question)}</strong></p>
         <p>${(q.options || []).map(esc).join(" · ")}</p>
-        <p>সঠিক উত্তর: ${esc(q.correct_answer || "")}</p>
         <button type="button" data-edit-web="${q.id}">✏️ পরিবর্তন</button>
         <button type="button" data-delete-web="${q.id}">মুছুন</button>
         <div id="edit-web-${q.id}" hidden>
