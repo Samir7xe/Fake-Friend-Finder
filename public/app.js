@@ -488,7 +488,7 @@ async function loadWebsiteQuestions() {
 
     startButton.addEventListener("click", () => {
       const name = $("friendCreatorName").value.trim();
-      const count = Number($("friendQuestionCount").value);
+      const count = allQuestions.length;
 if (!allQuestions.length) {
   alert("প্রশ্নভান্ডারে কোনো প্রশ্ন নেই।");
   return;
@@ -559,9 +559,10 @@ if (!allQuestions.length) {
         });
 
         $("ffIgnore").addEventListener("click", async () => {
-          answers[String(q.id)] = "";
-          await advance();
-        });
+  answers[String(q.id)] = "";
+  ignored.add(String(q.id));
+  await advance();
+});
 
         $("ffBack").addEventListener("click", () => {
           if (current > 0) {
@@ -571,7 +572,6 @@ if (!allQuestions.length) {
         });
       }
 
-      
 async function advance() {
   const allAnswered = questions.every(q =>
     typeof answers[String(q.id)] === "string" &&
@@ -585,9 +585,27 @@ async function advance() {
 
   for (let step = 1; step <= questions.length; step++) {
     const next = (current + step) % questions.length;
-    const answer = answers[String(questions[next].id)];
+    const id = String(questions[next].id);
+    const answer = answers[id];
+    const unanswered =
+      typeof answer !== "string" || answer.trim() === "";
 
-    if (typeof answer !== "string" || answer.trim() === "") {
+    if (unanswered && !ignored.has(id)) {
+      current = next;
+      renderQuestion();
+      return;
+    }
+  }
+
+  for (let step = 1; step <= questions.length; step++) {
+    const next = (current + step) % questions.length;
+    const id = String(questions[next].id);
+    const answer = answers[id];
+    const unanswered =
+      typeof answer !== "string" || answer.trim() === "";
+
+    if (unanswered) {
+      ignored.delete(id);
       current = next;
       renderQuestion();
       return;
