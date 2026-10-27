@@ -1371,13 +1371,43 @@ async function loadFriendQuiz(id) {
   const content = $("friendPlayContent");
   const resultBox = $("friendPlayResult");
 
-  content.innerHTML = `
+    content.innerHTML = `
     <label>তোমার নাম
       <input id="friendPlayerName" maxlength="50" placeholder="নিজের নাম লেখো">
     </label>
     <button type="button" id="friendStartButton">কুইজ শুরু করো</button>
+    <section class="question-card" id="friendLandingScoreboard">
+      <h3>🏆 এই কুইজের স্কোরবোর্ড</h3>
+      <p>স্কোর লোড হচ্ছে...</p>
+    </section>
   `;
+
   show("friendPlayView");
+
+  async function loadLandingScoreboard() {
+    const box = $("friendLandingScoreboard");
+    if (!box) return;
+
+    try {
+      const board = await api(
+        `/api/friend-quizzes/${encodeURIComponent(id)}/scoreboard`
+      );
+
+      box.innerHTML = `
+        <h3>🏆 এই কুইজের স্কোরবোর্ড</h3>
+        ${(board.scoreboard || []).map((item, index) => `
+          <p>${index + 1}. ${esc(item.player_name)} — ${esc(item.score)}</p>
+        `).join("") || "<p>এখনও কেউ এই কুইজ খেলেনি।</p>"}
+      `;
+    } catch (error) {
+      box.innerHTML = `
+        <h3>🏆 এই কুইজের স্কোরবোর্ড</h3>
+        <p>স্কোরবোর্ড এখন লোড করা যাচ্ছে না।</p>
+      `;
+    }
+  }
+
+  loadLandingScoreboard();
 
   $("friendStartButton").onclick = async () => {
     const playerName = $("friendPlayerName").value.trim();
@@ -1416,27 +1446,42 @@ async function loadFriendQuiz(id) {
             { method: "POST", body: JSON.stringify({ playerName, answers }) }
           );
           resultBox.textContent = `আমার স্কোর: ${score.score}/${score.total}`;
-      content.innerHTML = `<div class="question-card"><h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3><h2>আমার স্কোর: ${score.score}/${score.total}</h2>${(score.review || []).map((item, i) => `<div style="border:2px solid ${item.isCorrect ? '#16a34a' : '#dc2626'};background:${item.isCorrect ? '#dcfce7' : '#fee2e2'};color:#222;padding:14px;border-radius:12px;margin:12px 0"><h4>${i+1}. ${esc(item.question)}</h4><p>আপনার উত্তর: ${esc(item.playerAnswer || 'উত্তর দেননি')}</p><p>সঠিক উত্তর: ${esc(item.correctAnswer)}</p><b>${item.isCorrect ? 'সঠিক উত্তর ✓' : 'ভুল উত্তর ✗'}</b></div>`).join('')}</div>`;
-      try {
-        
-      } catch (e) { console.log('Scoreboard could not load'); }
-          content.innerHTML = `<button type="button" id="friendResultHome" style="display:block;width:100%;min-height:64px;margin:0 0 20px;padding:16px;font-size:22px;font-weight:800;border-radius:14px;position:relative;z-index:10;">HOME</button><div class="question-card"><h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3><h2>আমার স্কোর: ${score.score}/${score.total}</h2>${(score.review || []).map((item, i) => `<div style="border:2px solid ${item.isCorrect ? '#16a34a' : '#dc2626'};background:${item.isCorrect ? '#dcfce7' : '#fee2e2'};color:#222;padding:14px;border-radius:12px;margin:12px 0"><h4>${i + 1}. ${esc(item.question)}</h4><p>আপনার উত্তর: ${esc(item.playerAnswer || 'উত্তর দেননি')}</p><p>সঠিক উত্তর: ${esc(item.correctAnswer)}</p><b>${item.isCorrect ? 'সঠিক উত্তর ✓' : 'ভুল উত্তর ✗'}</b></div>`).join('')}</div>`;
-try {
-  const board = await api(
-    `/api/friend-quizzes/${encodeURIComponent(id)}/scoreboard`
-  );
+                content.innerHTML = `
+            <button type="button" id="friendResultHome"
+              style="display:block;width:100%;min-height:64px;margin:0 0 20px;padding:16px;font-size:22px;font-weight:800;border-radius:14px;">
+              হোমে ফিরুন
+            </button>
+            <div class="question-card">
+              <h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3>
+              <h2>আমার স্কোর: ${score.score}/${score.total}</h2>
+              ${(score.review || []).map((item, i) => `
+                <div class="question-card">
+                  <h4>${i + 1}. ${esc(item.question)}</h4>
+                  <p>আপনার উত্তর: ${esc(item.playerAnswer || "উত্তর দেননি")}</p>
+                  <p>সঠিক উত্তর: ${esc(item.correctAnswer)}</p>
+                  <b>${item.isCorrect ? "সঠিক উত্তর ✓" : "ভুল উত্তর ✗"}</b>
+                </div>
+              `).join("")}
+            </div>
+          `;
 
-  content.innerHTML += `
-    <section class="question-card">
-      <h3>স্কোরবোর্ড</h3>
-      ${(board.scoreboard || []).map((item, i) =>
-        `<p>${i + 1}. ${esc(item.player_name)} — ${item.score}</p>`
-      ).join("") || "<p>এখনও কোনো স্কোর নেই।</p>"}
-    </section>
-  `;
-} catch (error) {
-  console.log("Scoreboard could not load");
-      }          
+          try {
+            const board = await api(
+              `/api/friend-quizzes/${encodeURIComponent(id)}/scoreboard`
+            );
+
+            content.innerHTML += `
+              <section class="question-card">
+                <h3>🏆 স্কোরবোর্ড</h3>
+                ${(board.scoreboard || []).map((item, i) =>
+                  `<p>${i + 1}. ${esc(item.player_name)} — ${esc(item.score)}</p>`
+                ).join("") || "<p>এখনও কোনো স্কোর নেই।</p>"}
+              </section>
+            `;
+          } catch (error) {
+            console.log("Scoreboard could not load");
+          }
+
           $("friendResultHome").onclick = () => show("home");
         } catch (error) {
           alert(fail(error));
