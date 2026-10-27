@@ -590,7 +590,7 @@ if (!allQuestions.length) {
 
 wrap.innerHTML = `
   <div class="ff-card">
-    <h2 class="ff-title">🐵প্রশ্ন তৈরি হয়ে গেছে🦧</h2>
+    <h2 class="ff-title">🦥বন্ধুত্বের আসল পরীক্ষা!🐰</h2>
     <div id="ffQuestionArea"></div>
   </div>
 `;
