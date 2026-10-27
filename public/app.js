@@ -488,7 +488,7 @@ async function loadWebsiteQuestions() {
 
     startButton.addEventListener("click", () => {
       const name = $("friendCreatorName").value.trim();
-      const count = allQuestions.length;
+      const count = Number($("friendQuestionCount").value);
 if (!allQuestions.length) {
   alert("প্রশ্নভান্ডারে কোনো প্রশ্ন নেই।");
   return;
@@ -499,7 +499,7 @@ if (!allQuestions.length) {
       }
 
       const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-      const questions = shuffled;
+      const questions = shuffled.slice(0, count);
 
       const answers = {};
       const ignored = new Set();
@@ -573,12 +573,12 @@ if (!allQuestions.length) {
       }
 
 async function advance() {
-  const allAnswered = questions.every(q =>
+  const answeredCount = questions.filter(q =>
     typeof answers[String(q.id)] === "string" &&
     answers[String(q.id)].trim() !== ""
-  );
+  ).length;
 
-  if (allAnswered) {
+  if (answeredCount >= count) {
     await createQuiz();
     return;
   }
@@ -587,10 +587,11 @@ async function advance() {
     const next = (current + step) % questions.length;
     const id = String(questions[next].id);
     const answer = answers[id];
-    const unanswered =
-      typeof answer !== "string" || answer.trim() === "";
 
-    if (unanswered && !ignored.has(id)) {
+    if (
+      (typeof answer !== "string" || answer.trim() === "") &&
+      !ignored.has(id)
+    ) {
       current = next;
       renderQuestion();
       return;
@@ -601,10 +602,8 @@ async function advance() {
     const next = (current + step) % questions.length;
     const id = String(questions[next].id);
     const answer = answers[id];
-    const unanswered =
-      typeof answer !== "string" || answer.trim() === "";
 
-    if (unanswered) {
+    if (typeof answer !== "string" || answer.trim() === "") {
       ignored.delete(id);
       current = next;
       renderQuestion();
