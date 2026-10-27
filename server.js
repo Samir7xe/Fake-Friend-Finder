@@ -358,7 +358,7 @@ app.post('/api/friend-quiz-sessions/:id/submit', async (req, res) => {
 
     const order = sr.rows[0].question_order;
     const r = await c.query(
-      'SELECT id, creator_answer FROM friend_quiz_questions WHERE quiz_id=$1 AND id=ANY($2::bigint[])',
+      'SELECT id, prompt, creator_answer FROM friend_quiz_questions WHERE quiz_id=$1 AND id=ANY($2::bigint[])',
       [sr.rows[0].quiz_id, order]
     );
     if (r.rowCount !== order.length)
@@ -384,7 +384,11 @@ app.post('/api/friend-quiz-sessions/:id/submit', async (req, res) => {
       [req.params.id, playerName, JSON.stringify(saved), score, order.length]
     );
 
-    res.json({ score, total: order.length });
+    const review = order.map(id => {
+  const q = r.rows.find(item => String(item.id) === String(id));
+  return { question: q.prompt, playerAnswer: saved[id] || '', correctAnswer: q.creator_answer, isCorrect: saved[id] === q.creator_answer };
+});
+res.json({ score, total: order.length, review });
   } catch {
     res.status(500).json({ error: 'Could not save result' });
   } finally {
@@ -436,6 +440,19 @@ app.post('/api/website-answers', async (req, res) => {
     res.json({ ok: true, score, total: ids.length });
   } catch {
     res.status(500).json({ error: 'Could not save answers' });
+  }
+});
+
+app.get('/api/friend-quizzes/:id/scoreboard', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT s.player_name, s.score FROM friend_quiz_submissions s JOIN friend_quiz_sessions fs ON fs.id = s.session_id WHERE fs.quiz_id = $1 ORDER BY s.score DESC, s.player_name ASC',
+      [req.params.id]
+    );
+    res.json({ scoreboard: result.rows });
+  } catch (error) {
+    console.error('Scoreboard error:', error);
+    res.status(500).json({ error: 'Could not load scoreboard' });
   }
 });
 

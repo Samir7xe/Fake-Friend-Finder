@@ -1399,7 +1399,7 @@ async function loadFriendQuiz(id) {
             { method: "POST", body: JSON.stringify({ playerName, answers }) }
           );
           resultBox.textContent = `তোমার স্কোর: ${score.score}/${score.total}`;
-          content.innerHTML = `<div class="question-card"><h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3><p>তোমার স্কোর: ${score.score}/${score.total}</p></div>`;
+          content.innerHTML = `<div class="question-card"><h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3><h2>আমার স্কোর: ${score.score}/${score.total}</h2>${(score.review || []).map((item, i) => `<div style="border:2px solid ${item.isCorrect ? '#16a34a' : '#dc2626'};background:${item.isCorrect ? '#dcfce7' : '#fee2e2'};color:#222;padding:14px;border-radius:12px;margin:12px 0"><h4>${i + 1}. ${esc(item.question)}</h4><p>আপনার উত্তর: ${esc(item.playerAnswer || 'উত্তর দেননি')}</p><p>সঠিক উত্তর: ${esc(item.correctAnswer)}</p><b>${item.isCorrect ? 'সঠিক উত্তর ✓' : 'ভুল উত্তর ✗'}</b></div>`).join('')}</div>`;
         } catch (error) {
           alert(fail(error));
           submitBusy = false;
