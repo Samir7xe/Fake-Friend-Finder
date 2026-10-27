@@ -562,15 +562,17 @@ if (!allQuestions.length) {
       let current = 0;
       let creating = false;
 
-      startButton.classList.add("hidden");
-      const setupCard = startButton.closest(".ff-card");
-setupCard.querySelector(".ff-title").textContent = "✨ প্রশ্ন তৈরি করো ✨";
+      const wrap = startButton.closest(".ff-wrap");
 
-setupCard.querySelectorAll(
-  ".ff-label, .ff-input, .ff-choice-row"
-).forEach(element => {
-  element.hidden = true;
-});
+wrap.innerHTML = `
+  <div class="ff-card">
+    <h2 class="ff-title">✨ প্রশ্ন তৈরি করো ✨</h2>
+    <div id="ffQuestionArea"></div>
+  </div>
+`;
+
+area = $("ffQuestionArea");
+
       
       function renderQuestion() {
         const q = questions[current];
