@@ -517,10 +517,6 @@ if (!allQuestions.length) {
           answer => typeof answer === "string" && answer.trim() !== ""
         ).length;
         
-                const selectedCount = Object.values(answers).filter(
-          answer => typeof answer === "string" && answer.trim() !== ""
-        ).length;
-
         area.innerHTML = `
           <div style="margin-top:28px">
             <div class="ff-progress">
