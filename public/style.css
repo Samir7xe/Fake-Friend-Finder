@@ -537,3 +537,13 @@ input,textarea,select{border:2px solid var(--pink)!important;border-radius:14px!
     grid-template-columns: 1fr;
   }
 }
+
+#friendPlayView #friendStartButton {
+  display: block;
+  width: 100%;
+  min-height: 68px;
+  padding: 18px;
+  font-size: 21px;
+  font-weight: 800;
+  border-radius: 14px;
+}
