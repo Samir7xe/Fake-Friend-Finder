@@ -513,15 +513,26 @@ if (!allQuestions.length) {
       function renderQuestion() {
         const q = questions[current];
         const options = q.options;
+        const selectedCount = Object.values(answers).filter(
+          answer => typeof answer === "string" && answer.trim() !== ""
+        ).length;
         
+                const selectedCount = Object.values(answers).filter(
+          answer => typeof answer === "string" && answer.trim() !== ""
+        ).length;
+
         area.innerHTML = `
           <div style="margin-top:28px">
             <div class="ff-progress">
-              <div style="width:${((current + 1) / count) * 100}%"></div>
+              <div style="width:${(selectedCount / count) * 100}%"></div>
             </div>
 
             <p style="text-align:center;color:#d9c4f4">
-              প্রশ্ন ${current + 1} / ${count}
+  বর্তমান প্রশ্ন: ${current + 1}
+</p>
+
+            <p style="text-align:center;color:#d9c4f4">
+              প্রশ্ন সিলেক্ট করেছেন: ${selectedCount} / ${count}
             </p>
 
             <div class="ff-question">${esc(q.question)}</div>
