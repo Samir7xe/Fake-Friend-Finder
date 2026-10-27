@@ -502,6 +502,7 @@ if (!allQuestions.length) {
       const questions = shuffled;
 
       const answers = {};
+      const ignored = new Set();
       let current = 0;
       let creating = false;
 
