@@ -992,12 +992,8 @@ async function loadAdminQuizzes() {
 async function loadResults(id) {
   const container = $(`results-${id}`);
   if (!container) return;
-
   try {
-    const results = await api(
-      `/api/admin/quizzes/${encodeURIComponent(id)}/results`
-    );
-
+    const results = await api(`/api/admin/quizzes/${encodeURIComponent(id)}/results`);
     container.innerHTML = results.map(r =>
       `<p>${esc(r.player_name)}: ${r.score}/${r.total}</p>`
     ).join("") || "<p>কোনো ফলাফল নেই।</p>";
@@ -1005,34 +1001,26 @@ async function loadResults(id) {
     container.textContent = fail(error);
   }
 }
-
 async function loadAdminPublicQuestions() {
   const container = $("adminPublicQuestions");
   if (!container) return;
-
   try {
     const questions = await api("/api/admin/public-questions");
-
     container.innerHTML = questions.map(q => `
       <div class="question-card">
         <p>${esc(q.question)}</p>
-        <p>প্রেরক: ${esc(q.submitter_name)}</p>
+        <p>প্রেরক: ${esc(q.submitter_name || "")}</p>
         <button type="button" data-review="${q.id}" data-status="approved">অনুমোদন</button>
         <button type="button" data-review="${q.id}" data-status="rejected">বাতিল</button>
       </div>
     `).join("") || "<p>পর্যালোচনার জন্য কোনো প্রশ্ন নেই।</p>";
-
     container.querySelectorAll("[data-review]").forEach(button => {
       button.addEventListener("click", async () => {
         try {
-          await api(
-            `/api/admin/public-questions/${button.dataset.review}`,
-            {
-              method: "PUT",
-              body: JSON.stringify({ status: button.dataset.status })
-            }
-          );
-
+          await api(`/api/admin/public-questions/${button.dataset.review}`, {
+            method: "PUT",
+            body: JSON.stringify({ status: button.dataset.status })
+          });
           await loadAdminPublicQuestions();
           await loadPublicQuestions();
         } catch (error) {
@@ -1044,19 +1032,16 @@ async function loadAdminPublicQuestions() {
     container.textContent = fail(error);
   }
 }
-
 async function loadAdminWebsiteQuestions() {
   const container = $("adminWebsiteQuestions");
   if (!container) return;
-
   try {
     const questions = await api("/api/admin/website-questions");
-
     container.innerHTML = questions.map(q => `
       <div class="question-card" style="margin-bottom:14px">
         <p><strong>${esc(q.question)}</strong></p>
-        <p>${(q.options || []).map(esc).join(" · ")}</p>
-        <button type="button" data-edit-web="${q.id}">✏️ পরিবর্তন</button>
+        <p>${(q.options || []).map(esc).join(" • ")}</p>
+        <button type="button" data-edit-web="${q.id}">পরিবর্তন</button>
         <button type="button" data-delete-web="${q.id}">মুছুন</button>
         <div id="edit-web-${q.id}" hidden>
           <label>প্রশ্ন
@@ -1081,74 +1066,50 @@ async function loadAdminWebsiteQuestions() {
           <p class="edit-web-message"></p>
         </div>
       </div>
-    `).join("") || "<p>কোনো সক্রিয় প্রশ্ন নেই।</p>";
+    `).join("") || "<p>কোনো প্রশ্ন নেই।</p>";
 
     container.querySelectorAll("[data-edit-web]").forEach(button => {
       button.addEventListener("click", () => {
         const editor = container.querySelector(`#edit-web-${CSS.escape(button.dataset.editWeb)}`);
-        editor.hidden = !editor.hidden;
-      });
-    });
-
-    container.querySelectorAll(".edit-web-options").forEach(optionsBox => {
-      optionsBox.querySelectorAll(".edit-web-option").forEach(input => {
-        input.addEventListener("input", () => {
-          const select = optionsBox.parentElement.querySelector(".edit-web-correct");
-          const oldValue = select.value;
-          const values = [...optionsBox.querySelectorAll(".edit-web-option")].map(x => x.value.trim());
-          select.innerHTML = values.map(value =>
-            `<option value="${esc(value)}" ${value === oldValue ? "selected" : ""}>${esc(value)}</option>`
-          ).join("");
-        });
+        if (editor) editor.hidden = !editor.hidden;
       });
     });
 
     container.querySelectorAll("[data-cancel-web]").forEach(button => {
       button.addEventListener("click", () => {
-        loadAdminWebsiteQuestions();
+        const editor = container.querySelector(`#edit-web-${CSS.escape(button.dataset.cancelWeb)}`);
+        if (editor) editor.hidden = true;
+      });
+    });
+
+    container.querySelectorAll("[data-delete-web]").forEach(button => {
+      button.addEventListener("click", async () => {
+        if (!confirm("প্রশ্নটি মুছে ফেলবেন?")) return;
+        try {
+          await api(`/api/admin/website-questions/${button.dataset.deleteWeb}`, { method: "DELETE" });
+          await loadAdminWebsiteQuestions();
+        } catch (error) {
+          alert(fail(error));
+        }
       });
     });
 
     container.querySelectorAll("[data-save-web]").forEach(button => {
       button.addEventListener("click", async () => {
         const editor = container.querySelector(`#edit-web-${CSS.escape(button.dataset.saveWeb)}`);
-        const message = editor.querySelector(".edit-web-message");
+        if (!editor) return;
         const question = editor.querySelector(".edit-web-question").value.trim();
-        const options = [...editor.querySelectorAll(".edit-web-option")].map(x => x.value.trim());
-        const correctAnswer = editor.querySelector(".edit-web-correct").value;
-
-        if (!question || options.some(x => !x) || options.length < 2 ||
-            new Set(options).size !== options.length || !options.includes(correctAnswer)) {
-          message.textContent = "প্রশ্ন, আলাদা অপশন ও সঠিক উত্তর ঠিকভাবে দিন।";
-          return;
-        }
-
-        button.disabled = true;
+        const options = [...editor.querySelectorAll(".edit-web-option")].map(input => input.value.trim());
+        const correct_answer = editor.querySelector(".edit-web-correct").value;
+        const message = editor.querySelector(".edit-web-message");
         try {
           await api(`/api/admin/website-questions/${button.dataset.saveWeb}`, {
             method: "PUT",
-            body: { question, options, correctAnswer }
+            body: JSON.stringify({ question, options, correctAnswer: correct_answer })
           });
           await loadAdminWebsiteQuestions();
-          await loadWebsiteQuestions();
         } catch (error) {
           message.textContent = fail(error);
-          button.disabled = false;
-        }
-      });
-    });
-
-    container.querySelectorAll("[data-delete-web]").forEach(button => {
-      button.addEventListener("click", async () => {
-        if (!confirm("এই প্রশ্নটি মুছে ফেলবেন?")) return;
-        try {
-          await api(`/api/admin/website-questions/${button.dataset.deleteWeb}`, {
-            method: "DELETE"
-          });
-          await loadAdminWebsiteQuestions();
-          await loadWebsiteQuestions();
-        } catch (error) {
-          alert(fail(error));
         }
       });
     });
@@ -1156,9 +1117,6 @@ async function loadAdminWebsiteQuestions() {
     container.textContent = fail(error);
   }
 }
-
-/* ADD WEBSITE QUESTION */
-
 function renderWebsiteOptions(options = ["", "", "", ""]) {
   const container = $("newWebsiteOptions");
   if (!container) return;

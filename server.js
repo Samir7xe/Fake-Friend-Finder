@@ -142,13 +142,14 @@ app.put('/api/admin/website-questions/:id', admin, async (req, res) => {
 
 app.delete('/api/admin/website-questions/:id', admin, async (req, res) => {
   try {
-    const r = await pool.query(
-      'UPDATE website_questions SET active=FALSE, updated_at=NOW() WHERE id=$1 RETURNING id',
+    const result = await pool.query(
+      'UPDATE website_questions SET active=FALSE, updated_at=NOW() WHERE id=$1 AND active=TRUE RETURNING id',
       [req.params.id]
     );
-    if (!r.rowCount) return res.status(404).json({ error: 'Question not found' });
+    if (!result.rowCount) return res.status(404).json({ error: 'Question not found' });
     res.json({ ok: true });
-  } catch {
+  } catch (error) {
+    console.error('Delete website question error:', error);
     res.status(500).json({ error: 'Could not delete question' });
   }
 });
