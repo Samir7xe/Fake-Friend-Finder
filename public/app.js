@@ -573,12 +573,15 @@ if (!allQuestions.length) {
       }
 
 async function advance() {
-  const answeredCount = questions.filter(q =>
-    typeof answers[String(q.id)] === "string" &&
-    answers[String(q.id)].trim() !== ""
-  ).length;
+  const answeredIds = new Set(
+    Object.entries(answers)
+      .filter(([, answer]) =>
+        typeof answer === "string" && answer.trim() !== ""
+      )
+      .map(([id]) => id)
+  );
 
-  if (answeredCount >= count) {
+  if (answeredIds.size >= count) {
     await createQuiz();
     return;
   }
@@ -586,12 +589,8 @@ async function advance() {
   for (let step = 1; step <= questions.length; step++) {
     const next = (current + step) % questions.length;
     const id = String(questions[next].id);
-    const answer = answers[id];
 
-    if (
-      (typeof answer !== "string" || answer.trim() === "") &&
-      !ignored.has(id)
-    ) {
+    if (!answeredIds.has(id) && !ignored.has(id)) {
       current = next;
       renderQuestion();
       return;
@@ -601,17 +600,17 @@ async function advance() {
   for (let step = 1; step <= questions.length; step++) {
     const next = (current + step) % questions.length;
     const id = String(questions[next].id);
-    const answer = answers[id];
 
-    if (typeof answer !== "string" || answer.trim() === "") {
+    if (!answeredIds.has(id)) {
       ignored.delete(id);
       current = next;
       renderQuestion();
       return;
     }
   }
-}
 
+  alert("প্রয়োজনীয় সংখ্যক উত্তর দেওয়ার মতো প্রশ্ন নেই।");
+}
       async function createQuiz() {
         if (creating) return;
         creating = true;
@@ -627,7 +626,12 @@ async function advance() {
             method: "POST",
             body: JSON.stringify({
               creatorName: name,
-              questions: questions.map(q => ({
+              questions: questions
+  .filter(q => {
+    const answer = answers[String(q.id)];
+    return typeof answer === "string" && answer.trim() !== "";
+  })
+  .map(q => ({
                 questionId: q.id,
                 answer: answers[String(q.id)] ?? ""
               }))
