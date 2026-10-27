@@ -469,10 +469,18 @@ async function loadWebsiteQuestions() {
   cursor: pointer;
 }
 
+.ff-choice {
+  background: #211b36 !important;
+  color: #e8d8ff !important;
+  border: 2px solid #a66cff !important;
+  transition: background 0.2s, color 0.2s;
+}
+
 .ff-choice.selected {
-  border: 2px solid #d7b4ff;
-  background: linear-gradient(110deg, #6536a5, #922f8f);
-  color: white;
+  background: #00c853 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 12px #00c853 !important;
 }
         .ff-start,.ff-share{
           width:100%;padding:15px;border:0;border-radius:14px;
