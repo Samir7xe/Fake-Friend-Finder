@@ -795,7 +795,8 @@ async function loadAdminData() {
     loadAdminQuizzes(),
     loadAdminPublicQuestions(),
     loadAdminWebsiteQuestions(),
-    loadAdminWebsiteAnswers()
+    loadAdminWebsiteAnswers(),
+    loadAdminVisitorNames()
   ]);
 }
 
@@ -1076,6 +1077,28 @@ async function loadAdminWebsiteAnswers() {
         <p>স্কোর: ${Number(answer.score)}/${Number(answer.total)}</p>
       </div>
     `).join("") || "<p>এখনও কোনো উত্তর জমা পড়েনি।</p>";
+  } catch (error) {
+    container.textContent = fail(error);
+  }
+}
+
+/* VISITOR LIST ADMIN */
+
+async function loadAdminVisitorNames() {
+  const container = $("visitorNamesAdmin");
+  const count = $("visitorNamesCount");
+  if (!container) return;
+
+  try {
+    const visitors = await api("/api/admin/visitor-names");
+
+    if (count) count.textContent = `মোট: ${visitors.length}`;
+
+    container.innerHTML = visitors.map((visitor, index) => `
+      <div class="question-card">
+        <p><strong>${index + 1}.</strong> ${esc(visitor.name)}</p>
+      </div>
+    `).join("") || "<p>এখনও কেউ কুইজে নাম জমা দেয়নি।</p>";
   } catch (error) {
     container.textContent = fail(error);
   }

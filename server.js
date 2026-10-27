@@ -12,7 +12,7 @@ app.put('/api/admin/settings',admin,async(q,s)=>{let profile={displayName:clean(
 app.get('/api/admin/quizzes',admin,async(q,s)=>{let r=await pool.query(`SELECT q.id,q.creator_name,q.created_at,(SELECT COUNT(*) FROM questions x WHERE x.quiz_id=q.id)::int question_count,(SELECT COUNT(*) FROM submissions a JOIN quiz_sessions b ON b.id=a.session_id WHERE b.quiz_id=q.id)::int submission_count FROM quizzes q ORDER BY q.created_at DESC LIMIT 100`);s.json(r.rows)});app.get('/api/admin/quizzes/:id/results',admin,async(q,s)=>{let r=await pool.query('SELECT player_name,score,total,created_at FROM submissions s JOIN quiz_sessions ss ON ss.id=s.session_id WHERE ss.quiz_id=$1 ORDER BY s.created_at DESC LIMIT 200',[q.params.id]);s.json(r.rows)});
 app.post('/api/quizzes',async(q,s)=>{let name=clean(q.body?.creatorName,50),gender=clean(q.body?.creatorGender,40)||'prefer-not-to-say',qs=Array.isArray(q.body?.questions)?q.body.questions:[];if(!name)return s.status(400).json({error:'Please enter your name'});if(qs.length<1||qs.length>100)return s.status(400).json({error:'A quiz must contain 1–100 questions'});for(let x of qs){let opts=Array.isArray(x.options)?x.options.map(y=>clean(y,120)).filter(Boolean):[],correct=clean(x.correctAnswer,120);if(!clean(x.prompt,300)||opts.length<4||opts.length>12||new Set(opts).size!==opts.length||!opts.includes(correct))return s.status(400).json({error:'Each question needs 4–12 unique options and one correct answer'})}let quiz=rid(),c=await pool.connect();try{await c.query('BEGIN');await c.query('INSERT INTO quizzes(id,creator_name,creator_gender) VALUES($1,$2,$3)',[quiz,name,gender]);for(let x of qs)await c.query('INSERT INTO questions(quiz_id,prompt,options,correct_answer) VALUES($1,$2,$3::jsonb,$4)',[quiz,clean(x.prompt,300),JSON.stringify(x.options.map(y=>clean(y,120)).filter(Boolean)),clean(x.correctAnswer,120)]);await c.query('COMMIT');s.status(201).json({id:quiz,shareUrl:`${q.protocol}://${q.get('host')}/play/${quiz}`})}catch(e){await c.query('ROLLBACK');console.error(e);s.status(500).json({error:'Quiz could not be saved'})}finally{c.release()}});
 app.get('/api/quizzes/:id',async(q,s)=>{let quiz=await pool.query('SELECT id,creator_name FROM quizzes WHERE id=$1',[q.params.id]);if(!quiz.rowCount)return s.status(404).json({error:'Quiz not found'});let qs=await pool.query('SELECT id,prompt,options FROM questions WHERE quiz_id=$1 ORDER BY id',[q.params.id]);s.json({id:quiz.rows[0].id,creatorName:quiz.rows[0].creator_name,questions:qs.rows})});
-app.post('/api/quizzes/:id/start',async(q,s)=>{let ids=Array.isArray(q.body?.questionIds)?q.body.questionIds.map(Number):[],name=clean(q.body?.playerName,50);if(!name)return s.status(400).json({error:'Enter your name'});if(ids.length!==10||new Set(ids).size!==10)return s.status(400).json({error:'Choose exactly 10 different questions'});let exists=await pool.query('SELECT id FROM quizzes WHERE id=$1',[q.params.id]);if(!exists.rowCount)return s.status(404).json({error:'Quiz not found'});let r=await pool.query('SELECT id,prompt,options,correct_answer FROM questions WHERE quiz_id=$1 AND id=ANY($2::bigint[])',[q.params.id,ids]);if(r.rowCount!==10)return s.status(400).json({error:'Invalid question selection'});let sid=rid(),presented=r.rows.map(x=>({id:x.id,prompt:x.prompt,options:[...x.options.filter(a=>a!==x.correct_answer).sort(()=>Math.random()-.5).slice(0,3),x.correct_answer].sort(()=>Math.random()-.5)}));await pool.query('INSERT INTO quiz_sessions(id,quiz_id,question_order) VALUES($1,$2,$3::jsonb)',[sid,q.params.id,JSON.stringify(presented.map(x=>x.id))]);s.json({sessionId:sid,playerName:name,questions:presented})});
+app.post('/api/quizzes/:id/start',async(q,s)=>{let ids=Array.isArray(q.body?.questionIds)?q.body.questionIds.map(Number):[],name=clean(q.body?.playerName,50);if(!name)return s.status(400).json({error:'Enter your name'});if(ids.length!==10||new Set(ids).size!==10)return s.status(400).json({error:'Choose exactly 10 different questions'});let exists=await pool.query('SELECT id FROM quizzes WHERE id=$1',[q.params.id]);if(!exists.rowCount)return s.status(404).json({error:'Quiz not found'});let r=await pool.query('SELECT id,prompt,options,correct_answer FROM questions WHERE quiz_id=$1 AND id=ANY($2::bigint[])',[q.params.id,ids]);if(r.rowCount!==10)return s.status(400).json({error:'Invalid question selection'});let sid=rid(),presented=r.rows.map(x=>({id:x.id,prompt:x.prompt,options:[...x.options.filter(a=>a!==x.correct_answer).sort(()=>Math.random()-.5).slice(0,3),x.correct_answer].sort(()=>Math.random()-.5)}));await pool.query('INSERT INTO quiz_sessions(id,quiz_id,question_order) VALUES($1,$2,$3::jsonb)',[sid,q.params.id,JSON.stringify(presented.map(x=>x.id))]);await pool.query('INSERT INTO visitor_names(name) VALUES($1)',[name]);s.json({sessionId:sid,playerName:name,questions:presented})});
 app.post('/api/sessions/:id/submit',async(q,s)=>{let name=clean(q.body?.playerName,50),answers=q.body?.answers&&typeof q.body.answers==='object'?q.body.answers:{},sr=await pool.query('SELECT id,quiz_id,question_order FROM quiz_sessions WHERE id=$1',[q.params.id]);if(!sr.rowCount)return s.status(404).json({error:'Session not found'});let order=sr.rows[0].question_order,qs=await pool.query('SELECT id,correct_answer FROM questions WHERE quiz_id=$1 AND id=ANY($2::bigint[])',[sr.rows[0].quiz_id,order]),correct=new Map(qs.rows.map(x=>[String(x.id),x.correct_answer]));let score=order.filter(id=>String(answers[id]||'')===correct.get(String(id))).length,saved={};for(let id of order)saved[id]=clean(answers[id],120);await pool.query('INSERT INTO submissions(session_id,player_name,answers,score,total) VALUES($1,$2,$3::jsonb,$4,10)',[q.params.id,name||'Guest',JSON.stringify(saved),score]);s.json({score,total:10})});
 // PUBLIC QUESTIONS
 app.post('/api/public-questions', async (req, res) => {
@@ -317,6 +317,11 @@ app.post('/api/friend-quizzes/:id/start', async (req, res) => {
       ]
     );
 
+    await pool.query(
+      'INSERT INTO visitor_names(name) VALUES($1)',
+      [playerName]
+    );
+
     res.json({ sessionId, playerName, questions });
   } catch (e) {
     console.error(e);
@@ -420,6 +425,18 @@ app.post('/api/website-answers', async (req, res) => {
     res.json({ ok: true, score, total: ids.length });
   } catch {
     res.status(500).json({ error: 'Could not save answers' });
+  }
+});
+
+app.get('/api/admin/visitor-names', admin, async (req, res) => {
+  try {
+    const r = await pool.query(
+      'SELECT id, name FROM visitor_names ORDER BY id ASC'
+    );
+    res.json(r.rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Could not load visitor list' });
   }
 });
 
