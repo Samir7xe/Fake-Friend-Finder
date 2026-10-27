@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS friend_quizzes (
   creator_name TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE friend_quizzes
+ADD COLUMN IF NOT EXISTS creator_gender TEXT NOT NULL DEFAULT 'prefer-not-to-say';
 
 CREATE TABLE IF NOT EXISTS friend_quiz_questions (
   id BIGSERIAL PRIMARY KEY,
