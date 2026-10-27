@@ -968,10 +968,8 @@ $("saveProfile")?.addEventListener("click", async () => {
 async function loadAdminQuizzes() {
   const container = $("quizAdmin");
   if (!container) return;
-
   try {
     const quizzes = await api("/api/admin/quizzes");
-
     container.innerHTML = quizzes.map(q => `
       <div class="question-card">
         <p>${esc(q.creator_name)} — ${q.question_count} প্রশ্ন</p>
@@ -980,7 +978,6 @@ async function loadAdminQuizzes() {
         <div id="results-${esc(q.id)}"></div>
       </div>
     `).join("") || "<p>কোনো কুইজ নেই।</p>";
-
     container.querySelectorAll("[data-results]").forEach(button => {
       button.addEventListener("click", () => loadResults(button.dataset.results));
     });
@@ -988,7 +985,6 @@ async function loadAdminQuizzes() {
     container.textContent = fail(error);
   }
 }
-
 async function loadResults(id) {
   const container = $(`results-${id}`);
   if (!container) return;
