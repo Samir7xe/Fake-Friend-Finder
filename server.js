@@ -157,10 +157,10 @@ app.post('/api/friend-quizzes', async (req, res) => {
   const questions = Array.isArray(req.body?.questions)
     ? req.body.questions : [];
 
-  if (!creatorName || ![10, 15].includes(questions.length))
-    return res.status(400).json({
-      error: 'Name and 10 or 15 questions required'
-    });
+  if (!creatorName || !questions.length)
+  return res.status(400).json({
+    error: 'Name and questions required'
+  });
 
   const ids = questions.map(x => Number(x.questionId));
 
