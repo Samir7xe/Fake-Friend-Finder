@@ -74,11 +74,12 @@ app.put('/api/admin/public-questions/:id', admin, async (req, res) => {
 // WEBSITE QUESTIONS: ADMIN MANAGEMENT
 app.get('/api/website-questions', async (req, res) => {
   try {
-    const r = await pool.query(
+    const result = await pool.query(
       'SELECT id, question, options FROM website_questions WHERE active=TRUE ORDER BY id DESC'
     );
-    res.json(r.rows);
-  } catch {
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Website questions error:', error);
     res.status(500).json({ error: 'Could not load website questions' });
   }
 });
