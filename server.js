@@ -266,72 +266,48 @@ app.get('/api/friend-quizzes/:id', async (req, res) => {
 
 app.post('/api/friend-quizzes/:id/start', async (req, res) => {
   const playerName = clean(req.body?.playerName, 50);
-  if (!playerName)
-    return res.status(400).json({ error: 'Enter your name' });
+  if (!playerName) return res.status(400).json({ error: 'Enter your name' });
 
   try {
     const quiz = await pool.query(
       'SELECT id, creator_name FROM friend_quizzes WHERE id=$1',
       [req.params.id]
     );
-
-    if (!quiz.rowCount)
-      return res.status(404).json({ error: 'Quiz not found' });
+    if (!quiz.rowCount) return res.status(404).json({ error: 'Quiz not found' });
 
     const r = await pool.query(
-      `SELECT id, prompt, options, creator_answer
-       FROM friend_quiz_questions
-       WHERE quiz_id=$1 ORDER BY position`,
+      'SELECT id, prompt, options, creator_answer FROM friend_quiz_questions WHERE quiz_id=$1 ORDER BY position',
       [req.params.id]
     );
 
-      const creatorName = quiz.rows[0].creator_name || "Creator";
-      const questions = r.rows.map(q => {
-        const options = Array.isArray(q.options) ? q.options : [];
-        const answer = clean(q.creator_answer, 120);
-        const distractors = options
-          .filter(x => x !== answer)
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 3);
-        const choices = answer
-          ? [answer, ...distractors]
-          : [...options].sort(() => Math.random() - 0.5).slice(0, 4);
+    const creatorName = quiz.rows[0].creator_name || 'Creator';
+    const questions = r.rows.map(q => {
+      const options = Array.isArray(q.options) ? q.options : [];
+      const answer = clean(q.creator_answer, 120);
+      const distractors = options.filter(x => x !== answer)
+        .sort(() => Math.random() - 0.5).slice(0, 3);
+      const choices = answer
+        ? [answer, ...distractors].sort(() => Math.random() - 0.5)
+        : [...options].sort(() => Math.random() - 0.5).slice(0, 4);
 
-        return {
-          id: q.id,
-          prompt: q.prompt
-            .replace(/আমার/g, creatorName + "-এর")
-            .replace(/আমি(?=\s|[?!।,.]|$)/g, creatorName)
-            .replace(/পছন্দ করি/g, "পছন্দ করে")
-            .replace(/বসি/g, "বসে")
-            .replace(/যাই/g, "যায়")
-            .replace(/খাই/g, "খায়")
-            .replace(/করি/g, "করে")
-            .replace(/থাকি/g, "থাকে"),
-          options: choices.sort(() => Math.random() - 0.5)
-        };
-      });
+      return {
+        id: q.id,
+        prompt: q.prompt.replace(/আমার/g, creatorName),
+        options: choices
+      };
+    });
 
-    if (questions.some(q => q.options.length !== 4))
-      return res.status(400).json({
-        error: 'Every question needs 4 valid options'
-      });
+    if (questions.some(q => q.options.length !== 4)) {
+      return res.status(400).json({ error: 'Every question needs 4 valid options' });
+    }
 
     const sessionId = rid();
-
     await pool.query(
-      `INSERT INTO friend_quiz_sessions
-       (id, quiz_id, question_order)
-       VALUES($1,$2,$3::jsonb)`,
-      [
-        sessionId,
-        req.params.id,
-        JSON.stringify(questions.map(q => q.id))
-      ]
+      'INSERT INTO friend_quiz_sessions (id, quiz_id, question_order) VALUES($1,$2,$3::jsonb)',
+      [sessionId, req.params.id, JSON.stringify(questions.map(q => q.id))]
     );
-
     await pool.query(
-      'INSERT INTO visitor_names(name) VALUES($1)',
+      'INSERT INTO visitor_names (name) VALUES($1)',
       [playerName]
     );
 
