@@ -563,6 +563,14 @@ if (!allQuestions.length) {
       let creating = false;
 
       startButton.classList.add("hidden");
+      const setupCard = startButton.closest(".ff-card");
+setupCard.querySelector(".ff-title").textContent = "✨ প্রশ্ন তৈরি করো ✨";
+
+setupCard.querySelectorAll(
+  ".ff-label, .ff-input, .ff-choice-row"
+).forEach(element => {
+  element.hidden = true;
+});
       
       function renderQuestion() {
         const q = questions[current];
@@ -1410,10 +1418,25 @@ async function loadFriendQuiz(id) {
           resultBox.textContent = `আমার স্কোর: ${score.score}/${score.total}`;
       content.innerHTML = `<div class="question-card"><h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3><h2>আমার স্কোর: ${score.score}/${score.total}</h2>${(score.review || []).map((item, i) => `<div style="border:2px solid ${item.isCorrect ? '#16a34a' : '#dc2626'};background:${item.isCorrect ? '#dcfce7' : '#fee2e2'};color:#222;padding:14px;border-radius:12px;margin:12px 0"><h4>${i+1}. ${esc(item.question)}</h4><p>আপনার উত্তর: ${esc(item.playerAnswer || 'উত্তর দেননি')}</p><p>সঠিক উত্তর: ${esc(item.correctAnswer)}</p><b>${item.isCorrect ? 'সঠিক উত্তর ✓' : 'ভুল উত্তর ✗'}</b></div>`).join('')}</div>`;
       try {
-      const board = await api(`/api/friend-quizzes/${encodeURIComponent(id)}/scoreboard`);
-      content.innerHTML += `<section class="question-card"><h3>স্কোরবোর্ড</h3>${(board.scoreboard || []).map((item, i) => `<p>${i + 1}. ${esc(item.player_name)} — ${item.score}</p>`).join("") || "<p>এখনও কোনো স্কোর নেই।</p>"}</section>`;
+        
       } catch (e) { console.log('Scoreboard could not load'); }
           content.innerHTML = `<button type="button" id="friendResultHome" style="display:block;width:100%;min-height:64px;margin:0 0 20px;padding:16px;font-size:22px;font-weight:800;border-radius:14px;position:relative;z-index:10;">HOME</button><div class="question-card"><h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3><h2>আমার স্কোর: ${score.score}/${score.total}</h2>${(score.review || []).map((item, i) => `<div style="border:2px solid ${item.isCorrect ? '#16a34a' : '#dc2626'};background:${item.isCorrect ? '#dcfce7' : '#fee2e2'};color:#222;padding:14px;border-radius:12px;margin:12px 0"><h4>${i + 1}. ${esc(item.question)}</h4><p>আপনার উত্তর: ${esc(item.playerAnswer || 'উত্তর দেননি')}</p><p>সঠিক উত্তর: ${esc(item.correctAnswer)}</p><b>${item.isCorrect ? 'সঠিক উত্তর ✓' : 'ভুল উত্তর ✗'}</b></div>`).join('')}</div>`;
+try {
+  const board = await api(
+    `/api/friend-quizzes/${encodeURIComponent(id)}/scoreboard`
+  );
+
+  content.innerHTML += `
+    <section class="question-card">
+      <h3>স্কোরবোর্ড</h3>
+      ${(board.scoreboard || []).map((item, i) =>
+        `<p>${i + 1}. ${esc(item.player_name)} — ${item.score}</p>`
+      ).join("") || "<p>এখনও কোনো স্কোর নেই।</p>"}
+    </section>
+  `;
+} catch (error) {
+  console.log("Scoreboard could not load");
+      }          
           $("friendResultHome").onclick = () => show("home");
         } catch (error) {
           alert(fail(error));
