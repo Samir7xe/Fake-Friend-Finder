@@ -163,6 +163,11 @@ app.post('/api/friend-quizzes', async (req, res) => {
   return res.status(400).json({
     error: 'Name and questions required'
   });
+  const creatorGender = clean(req.body?.creatorGender, 10);
+
+if (!['Male', 'Female'].includes(creatorGender)) {
+  return res.status(400).json({ error: 'Choose Male or Female' });
+}
 
   const ids = questions.map(x => Number(x.questionId));
 
@@ -204,9 +209,9 @@ app.post('/api/friend-quizzes', async (req, res) => {
     const quizId = rid();
 
     await c.query(
-      'INSERT INTO friend_quizzes(id, creator_name) VALUES($1,$2)',
-      [quizId, creatorName]
-    );
+  'INSERT INTO friend_quizzes(id, creator_name, creator_gender) VALUES($1,$2,$3)',
+  [quizId, creatorName, creatorGender]
+);
 
     for (let i = 0; i < questions.length; i++) {
       const item = questions[i];
