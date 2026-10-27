@@ -1455,7 +1455,7 @@ async function loadFriendQuiz(id) {
               <h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3>
               <h2>আমার স্কোর: ${score.score}/${score.total}</h2>
               ${(score.review || []).map((item, i) => `
-                <div class="question-card">
+                <div style="border:2px solid ${item.isCorrect ? '#16a34a' : '#dc2626'};background:${item.isCorrect ? '#dcfce2' : '#fee2e2'};color:#222;padding:14px;border-radius:12px;margin:12px 0">
                   <h4>${i + 1}. ${esc(item.question)}</h4>
                   <p>আপনার উত্তর: ${esc(item.playerAnswer || "উত্তর দেননি")}</p>
                   <p>সঠিক উত্তর: ${esc(item.correctAnswer)}</p>
