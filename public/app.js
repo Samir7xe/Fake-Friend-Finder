@@ -1,6 +1,30 @@
 
 "use strict";
 
+const LANGUAGE_NAMES = {
+  bn: "বাংলা",
+  en: "English",
+  hi: "हिन्दी",
+  es: "Español",
+  fr: "Français",
+  ar: "العربية",
+  pt: "Português",
+  id: "Bahasa Indonesia",
+  ja: "日本語",
+  ko: "한국어",
+  other: "Others"
+};
+
+const getSelectedLanguage = () => {
+  const select = document.getElementById("language");
+  if (!select) return "bn";
+
+  const selected = select.options[select.selectedIndex];
+  if (!selected) return "bn";
+
+  return selected.value || "bn";
+};
+
 const $ = id => document.getElementById(id);
 
 const state = {
@@ -1670,3 +1694,26 @@ initializeApp().catch(error => {
     setupGlobalMusic();
   }
 })();
+
+const languageSelect = document.getElementById("language");
+
+if (languageSelect) {
+  languageSelect.addEventListener("change", function () {
+    const lang = this.value === "other"
+      ? (navigator.language || "en").split("-")[0]
+      : this.value;
+
+    const tryTranslate = () => {
+      const combo = document.querySelector(".goog-te-combo");
+
+      if (combo) {
+        combo.value = lang;
+        combo.dispatchEvent(new Event("change"));
+      }
+    };
+
+    tryTranslate();
+    setTimeout(tryTranslate, 1000);
+    setTimeout(tryTranslate, 2500);
+  });
+}
