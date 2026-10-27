@@ -499,7 +499,7 @@ if (!allQuestions.length) {
       }
 
       const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-      const questions = shuffled.slice(0, count);
+      const questions = shuffled;
 
       const answers = {};
       let current = 0;
