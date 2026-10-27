@@ -450,6 +450,30 @@ async function loadWebsiteQuestions() {
         }
         .ff-back{background:#3b3150;color:white}
         .ff-ignore{background:#33283f;color:#e2c9ff;border:1px solid #8f67b5}
+        .ff-choice-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.ff-choice {
+  min-height: 54px;
+  padding: 12px 8px;
+  border: 1px solid #a66cff88;
+  border-radius: 13px;
+  background: #211b36;
+  color: #e8d8ff;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ff-choice.selected {
+  border: 2px solid #d7b4ff;
+  background: linear-gradient(110deg, #6536a5, #922f8f);
+  color: white;
+}
         .ff-start,.ff-share{
           width:100%;padding:15px;border:0;border-radius:14px;
           background:linear-gradient(90deg,#913bdb,#e044b6);
@@ -465,13 +489,17 @@ async function loadWebsiteQuestions() {
           <input class="ff-input" id="friendCreatorName"
             maxlength="50" placeholder="নিজের নাম লেখো">
 
-          <label class="ff-label" for="friendQuestionCount">
-            কতটি প্রশ্ন থাকবে?
-          </label>
-          <select class="ff-input" id="friendQuestionCount">
-            <option value="10">১০টি প্রশ্ন</option>
-            <option value="15">১৫টি প্রশ্ন</option>
-          </select>
+          <label class="ff-label">তোমার Gender বেছে নাও</label>
+<div class="ff-choice-row">
+  <button type="button" class="ff-choice selected" data-gender="Male">MALE</button>
+  <button type="button" class="ff-choice" data-gender="Female">FEMALE</button>
+</div>
+
+<label class="ff-label">কতটি প্রশ্ন থাকবে?</label>
+<div class="ff-choice-row">
+  <button type="button" class="ff-choice selected" data-count="10">10 QUESTIONS</button>
+  <button type="button" class="ff-choice" data-count="15">15 QUESTIONS</button>
+</div>
 
           <button type="button" class="ff-start" id="ffStart"
             style="margin-top:22px">
@@ -484,11 +512,31 @@ async function loadWebsiteQuestions() {
     `;
 
     const startButton = $("ffStart");
-    const area = $("ffQuestionArea");
+let area = $("ffQuestionArea");
+let selectedGender = "Male";
+let selectedCount = 10;
+
+document.querySelectorAll("[data-gender]").forEach(button => {
+  button.addEventListener("click", () => {
+    selectedGender = button.dataset.gender;
+    document.querySelectorAll("[data-gender]").forEach(b => {
+      b.classList.toggle("selected", b === button);
+    });
+  });
+});
+
+document.querySelectorAll("[data-count]").forEach(button => {
+  button.addEventListener("click", () => {
+    selectedCount = Number(button.dataset.count);
+    document.querySelectorAll("[data-count]").forEach(b => {
+      b.classList.toggle("selected", b === button);
+    });
+  });
+});
 
     startButton.addEventListener("click", () => {
       const name = $("friendCreatorName").value.trim();
-      const count = Number($("friendQuestionCount").value);
+      const count = selectedCount;
 if (!allQuestions.length) {
   alert("প্রশ্নভান্ডারে কোনো প্রশ্ন নেই।");
   return;
@@ -507,9 +555,7 @@ if (!allQuestions.length) {
       let creating = false;
 
       startButton.classList.add("hidden");
-      $("friendCreatorName").disabled = true;
-      $("friendQuestionCount").disabled = true;
-
+      
       function renderQuestion() {
         const q = questions[current];
         const options = q.options;
@@ -633,6 +679,7 @@ async function advance() {
             method: "POST",
             body: JSON.stringify({
               creatorName: name,
+              creatorGender: selectedGender,
               questions: questions
   .filter(q => {
     const answer = answers[String(q.id)];
