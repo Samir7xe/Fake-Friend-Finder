@@ -83,6 +83,17 @@ app.get('/api/website-questions', async (req, res) => {
   }
 });
 
+app.get('/api/admin/website-questions', admin, async (req, res) => {
+  try {
+    const r = await pool.query(
+      'SELECT id, question, options, correct_answer FROM website_questions WHERE active=TRUE ORDER BY id DESC'
+    );
+    res.json(r.rows);
+  } catch {
+    res.status(500).json({ error: 'Could not load admin website questions' });
+  }
+});
+
 app.post('/api/admin/website-questions', admin, async (req, res) => {
   const question = clean(req.body?.question, 300);
   const options = Array.isArray(req.body?.options)
@@ -146,10 +157,10 @@ app.post('/api/friend-quizzes', async (req, res) => {
   const questions = Array.isArray(req.body?.questions)
     ? req.body.questions : [];
 
-  if (!creatorName || ![10, 15].includes(questions.length))
-    return res.status(400).json({
-      error: 'Name and 10 or 15 questions required'
-    });
+  if (!creatorName || !questions.length)
+  return res.status(400).json({
+    error: 'Name and questions required'
+  });
 
   const ids = questions.map(x => Number(x.questionId));
 

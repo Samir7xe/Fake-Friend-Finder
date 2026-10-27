@@ -489,23 +489,20 @@ async function loadWebsiteQuestions() {
     startButton.addEventListener("click", () => {
       const name = $("friendCreatorName").value.trim();
       const count = Number($("friendQuestionCount").value);
-if (count !== 10 && count !== 15) {
-  alert("১০ অথবা ১৫টি প্রশ্ন বেছে নাও।");
+if (!allQuestions.length) {
+  alert("প্রশ্নভান্ডারে কোনো প্রশ্ন নেই।");
   return;
-          }
-      if (allQuestions.length < count) {
-  alert(`কমপক্ষে ${count}টি প্রশ্ন দরকার। এখন আছে ${allQuestions.length}টি।`);
-  return;
-      }
+}
       if (!name) {
         alert("আগে নিজের নাম লেখো।");
         return;
       }
 
       const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-      const questions = shuffled.slice(0, count);
+      const questions = shuffled;
 
       const answers = {};
+      const ignored = new Set();
       let current = 0;
       let creating = false;
 
@@ -516,15 +513,22 @@ if (count !== 10 && count !== 15) {
       function renderQuestion() {
         const q = questions[current];
         const options = q.options;
+        const selectedCount = Object.values(answers).filter(
+          answer => typeof answer === "string" && answer.trim() !== ""
+        ).length;
         
         area.innerHTML = `
           <div style="margin-top:28px">
             <div class="ff-progress">
-              <div style="width:${((current + 1) / count) * 100}%"></div>
+              <div style="width:${(selectedCount / count) * 100}%"></div>
             </div>
 
             <p style="text-align:center;color:#d9c4f4">
-              প্রশ্ন ${current + 1} / ${count}
+  বর্তমান প্রশ্ন: ${current + 1}
+</p>
+
+            <p style="text-align:center;color:#d9c4f4">
+              প্রশ্ন সিলেক্ট করেছেন: ${selectedCount} / ${count}
             </p>
 
             <div class="ff-question">${esc(q.question)}</div>
@@ -562,9 +566,10 @@ if (count !== 10 && count !== 15) {
         });
 
         $("ffIgnore").addEventListener("click", async () => {
-          answers[String(q.id)] = "";
-          await advance();
-        });
+  answers[String(q.id)] = "";
+  ignored.add(String(q.id));
+  await advance();
+});
 
         $("ffBack").addEventListener("click", () => {
           if (current > 0) {
@@ -574,30 +579,45 @@ if (count !== 10 && count !== 15) {
         });
       }
 
-      
 async function advance() {
-  const allAnswered = questions.every(q =>
-    typeof answers[String(q.id)] === "string" &&
-    answers[String(q.id)].trim() !== ""
+  const answeredIds = new Set(
+    Object.entries(answers)
+      .filter(([, answer]) =>
+        typeof answer === "string" && answer.trim() !== ""
+      )
+      .map(([id]) => id)
   );
 
-  if (allAnswered) {
+  if (answeredIds.size >= count) {
     await createQuiz();
     return;
   }
 
   for (let step = 1; step <= questions.length; step++) {
     const next = (current + step) % questions.length;
-    const answer = answers[String(questions[next].id)];
+    const id = String(questions[next].id);
 
-    if (typeof answer !== "string" || answer.trim() === "") {
+    if (!answeredIds.has(id) && !ignored.has(id)) {
       current = next;
       renderQuestion();
       return;
     }
   }
-}
 
+  for (let step = 1; step <= questions.length; step++) {
+    const next = (current + step) % questions.length;
+    const id = String(questions[next].id);
+
+    if (!answeredIds.has(id)) {
+      ignored.delete(id);
+      current = next;
+      renderQuestion();
+      return;
+    }
+  }
+
+  alert("প্রয়োজনীয় সংখ্যক উত্তর দেওয়ার মতো প্রশ্ন নেই।");
+}
       async function createQuiz() {
         if (creating) return;
         creating = true;
@@ -613,7 +633,12 @@ async function advance() {
             method: "POST",
             body: JSON.stringify({
               creatorName: name,
-              questions: questions.map(q => ({
+              questions: questions
+  .filter(q => {
+    const answer = answers[String(q.id)];
+    return typeof answer === "string" && answer.trim() !== "";
+  })
+  .map(q => ({
                 questionId: q.id,
                 answer: answers[String(q.id)] ?? ""
               }))
@@ -625,33 +650,104 @@ async function advance() {
           }
 
           area.innerHTML = `
-            <div style="margin-top:30px;text-align:center">
-              <h3 style="color:#e0c5ff">🎉 তোমার কুইজ তৈরি!</h3>
-              <button type="button" class="ff-share" id="ffShare">
-                Share ↗
-              </button>
-            </div>
-          `;
+  <div style="margin-top:30px;text-align:center">
+    <h3 style="color:#e0c5ff">🎉 তোমার বন্ধুদের শেয়ার করো..!! ☺️</h3>
+    <div class="ff-share-layout">
+      <div class="ff-share-side">🐻</div>
+      <div class="ff-share-main">
+        <button type="button" class="ff-share" id="ffShare" aria-label="Share">
+          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <path d="M8.7 10.5 15.3 6.5M8.7 13.5l6.6 4"/>
+          </svg>
+        </button>
+        <div class="ff-share-options">
+          <button type="button" id="ffCopyLink">📋 Copy Link</button>
+          <button type="button" id="ffWhatsApp">🟢 WhatsApp</button>
+          <button type="button" id="ffFacebook">🔵 Facebook</button>
+          <button type="button" id="ffMessenger">💬 Messenger</button>
+          <button type="button" id="ffTelegram">✈️ Telegram</button>
+          <button type="button" id="ffInstagram">📸 Instagram</button>
+        </div>
+      </div>
+      <div class="ff-share-side">🐼</div>
+    </div>
+  </div>
+`;
+          const shareUrl = result.shareUrl;
+          const shareTitle = `${name}-এর Friend Quiz`;
+          const shareText = "আমার Friend Quiz খেলো!";
+
+          $("ffCopyLink").addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(shareUrl);
+              alert("লিংক কপি হয়েছে!");
+            } catch {
+              prompt("লিংক কপি করো:", shareUrl);
+            }
+          });
+
+          $("ffWhatsApp").addEventListener("click", () => {
+            window.open(
+              `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`,
+              "_blank"
+            );
+          });
+
+          $("ffFacebook").addEventListener("click", () => {
+            window.open(
+              `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+              "_blank"
+            );
+          });
+
+          $("ffMessenger").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+  } catch {}
+
+  window.location.href =
+    "fb-messenger://share/?link=" + encodeURIComponent(shareUrl);
+});
+
+          $("ffTelegram").addEventListener("click", () => {
+            window.open(
+              `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`,
+              "_blank"
+            );
+          });
+
+          $("ffInstagram").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+  } catch {
+    prompt("লিংক কপি করো:", shareUrl);
+  }
+
+  window.location.href = "instagram://direct-inbox";
+});
 
           $("ffShare").addEventListener("click", async () => {
-            if (typeof navigator.share !== "function") {
-              alert("এই ডিভাইসে Share অপশনটি উপলব্ধ নেই।");
+            if (!navigator.share) {
+              alert("নিচের অপশন থেকে শেয়ার করো।");
               return;
             }
 
             try {
               await navigator.share({
-                title: `${name}-এর Friend Quiz`,
-                text: "আমার Friend Quiz খেলো!",
-                url: result.shareUrl
+                title: shareTitle,
+                text: shareText,
+                url: shareUrl
               });
             } catch (error) {
               if (error.name !== "AbortError") {
-                alert("শেয়ার করা যায়নি। আবার চেষ্টা করো।");
+                alert("শেয়ার করা যায়নি।");
               }
             }
           });
-
+          
           score.classList.add("hidden");
           score.textContent = "";
           area.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -954,26 +1050,101 @@ async function loadAdminWebsiteQuestions() {
   if (!container) return;
 
   try {
-    const questions = await api("/api/website-questions");
+    const questions = await api("/api/admin/website-questions");
 
     container.innerHTML = questions.map(q => `
-      <div class="question-card">
-        <p>${esc(q.question)}</p>
+      <div class="question-card" style="margin-bottom:14px">
+        <p><strong>${esc(q.question)}</strong></p>
         <p>${(q.options || []).map(esc).join(" · ")}</p>
+        <button type="button" data-edit-web="${q.id}">✏️ পরিবর্তন</button>
         <button type="button" data-delete-web="${q.id}">মুছুন</button>
+        <div id="edit-web-${q.id}" hidden>
+          <label>প্রশ্ন
+            <textarea class="edit-web-question">${esc(q.question)}</textarea>
+          </label>
+          <div class="edit-web-options">
+            ${(q.options || []).map((option, i) => `
+              <label>অপশন ${i + 1}
+                <input class="edit-web-option" value="${esc(option)}">
+              </label>
+            `).join("")}
+          </div>
+          <label>সঠিক উত্তর
+            <select class="edit-web-correct">
+              ${(q.options || []).map(option => `
+                <option value="${esc(option)}" ${option === q.correct_answer ? "selected" : ""}>${esc(option)}</option>
+              `).join("")}
+            </select>
+          </label>
+          <button type="button" data-save-web="${q.id}">সেভ করুন</button>
+          <button type="button" data-cancel-web="${q.id}">বাতিল</button>
+          <p class="edit-web-message"></p>
+        </div>
       </div>
     `).join("") || "<p>কোনো সক্রিয় প্রশ্ন নেই।</p>";
+
+    container.querySelectorAll("[data-edit-web]").forEach(button => {
+      button.addEventListener("click", () => {
+        const editor = container.querySelector(`#edit-web-${CSS.escape(button.dataset.editWeb)}`);
+        editor.hidden = !editor.hidden;
+      });
+    });
+
+    container.querySelectorAll(".edit-web-options").forEach(optionsBox => {
+      optionsBox.querySelectorAll(".edit-web-option").forEach(input => {
+        input.addEventListener("input", () => {
+          const select = optionsBox.parentElement.querySelector(".edit-web-correct");
+          const oldValue = select.value;
+          const values = [...optionsBox.querySelectorAll(".edit-web-option")].map(x => x.value.trim());
+          select.innerHTML = values.map(value =>
+            `<option value="${esc(value)}" ${value === oldValue ? "selected" : ""}>${esc(value)}</option>`
+          ).join("");
+        });
+      });
+    });
+
+    container.querySelectorAll("[data-cancel-web]").forEach(button => {
+      button.addEventListener("click", () => {
+        loadAdminWebsiteQuestions();
+      });
+    });
+
+    container.querySelectorAll("[data-save-web]").forEach(button => {
+      button.addEventListener("click", async () => {
+        const editor = container.querySelector(`#edit-web-${CSS.escape(button.dataset.saveWeb)}`);
+        const message = editor.querySelector(".edit-web-message");
+        const question = editor.querySelector(".edit-web-question").value.trim();
+        const options = [...editor.querySelectorAll(".edit-web-option")].map(x => x.value.trim());
+        const correctAnswer = editor.querySelector(".edit-web-correct").value;
+
+        if (!question || options.some(x => !x) || options.length < 2 ||
+            new Set(options).size !== options.length || !options.includes(correctAnswer)) {
+          message.textContent = "প্রশ্ন, আলাদা অপশন ও সঠিক উত্তর ঠিকভাবে দিন।";
+          return;
+        }
+
+        button.disabled = true;
+        try {
+          await api(`/api/admin/website-questions/${button.dataset.saveWeb}`, {
+            method: "PUT",
+            body: { question, options, correctAnswer }
+          });
+          await loadAdminWebsiteQuestions();
+          await loadWebsiteQuestions();
+        } catch (error) {
+          message.textContent = fail(error);
+          button.disabled = false;
+        }
+      });
+    });
 
     container.querySelectorAll("[data-delete-web]").forEach(button => {
       button.addEventListener("click", async () => {
         if (!confirm("এই প্রশ্নটি মুছে ফেলবেন?")) return;
-
         try {
-          await api(
-            `/api/admin/website-questions/${button.dataset.deleteWeb}`,
-            { method: "DELETE" }
-          );
-
+          await api(`/api/admin/website-questions/${button.dataset.deleteWeb}`, {
+            method: "DELETE"
+          });
           await loadAdminWebsiteQuestions();
           await loadWebsiteQuestions();
         } catch (error) {
