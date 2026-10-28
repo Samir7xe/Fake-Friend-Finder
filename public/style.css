@@ -550,30 +550,32 @@ input,textarea,select{border:2px solid var(--pink)!important;border-radius:14px!
 
 
 .welcome-title {
-  margin: 10px 0 18px;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 14px auto 20px;
+  padding: 14px 18px;
   text-align: center;
-  font-size: clamp(27px, 6vw, 40px);
+  font-size: clamp(25px, 6vw, 36px);
   font-weight: 900;
   line-height: 1.35;
   letter-spacing: 0.3px;
-  color: #ff4fa3;
-  text-shadow:
-    0 2px 0 #ffffff,
-    0 4px 0 #b52d83,
-    0 6px 14px rgba(255, 65, 160, 0.35);
+  color: #ff70bd;
+  background: linear-gradient(145deg, #17132e, #302052);
+  border: 2px solid #ff70bd;
+  border-radius: 18px;
+  box-shadow:
+    0 0 8px #ff4fa366,
+    0 0 22px #a34dff44,
+    inset 0 0 12px #ff70bd18;
+  text-shadow: 0 2px 0 #6e285c;
 }
 
 .welcome-title span {
-  display: inline-block;
-  color: #7755ff;
-  background: linear-gradient(
-    90deg,
-    #ff3e9d 0%,
-    #a34dff 50%,
-    #367dff 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 3px 2px rgba(116, 67, 220, 0.25));
+  display: block;
+  color: #ffffff;
+  font-weight: 900;
+  text-shadow:
+    0 0 5px #ff70bd,
+    0 0 12px #a34dff;
 }
