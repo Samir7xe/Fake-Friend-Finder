@@ -1508,7 +1508,10 @@ async function loadFriendQuiz(id) {
             console.log("Scoreboard could not load");
           }
 
-          $("friendResultHome").onclick = () => show("home");
+          $("friendResultHome").onclick = async () => {
+  show("websiteMode");
+  await loadWebsiteQuestions();
+};
         } catch (error) {
           alert(fail(error));
           submitBusy = false;
