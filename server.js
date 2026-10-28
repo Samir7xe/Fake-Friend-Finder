@@ -5,6 +5,29 @@ if(!process.env.DATABASE_URL||!process.env.SESSION_SECRET||process.env.SESSION_S
 const pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:process.env.PGSSL==='true'?{rejectUnauthorized:false}:undefined});
 app.set('trust proxy',1);app.use(express.json({limit:'150kb'}));app.use(express.static(path.join(__dirname,'public')));app.use(session({name:'rff.sid',secret:process.env.SESSION_SECRET,resave:false,saveUninitialized:false,cookie:{httpOnly:true,secure:prod,sameSite:'lax',maxAge:28800000}}));
 const rid=()=>crypto.randomBytes(9).toString('base64url'),clean=(x,n=120)=>String(x??'').trim().slice(0,n),admin=(req,res,next)=>req.session.isAdmin?next():res.status(401).json({error:'Unauthorized'});
+function personalizeFriendQuestion(prompt, creatorName) {
+  const name = clean(creatorName, 50) || "Creator";
+
+  const possessiveName = /[\u0980-\u09FF]/.test(name)
+    ? name + (/[অআইঈউঊঋএঐওঔা-ৌ]$/.test(name) ? "র" : "ের")
+    : name + "-এর";
+
+  return String(prompt || "")
+    .replace(/আমার/g, possessiveName)
+    .replace(/আমি/g, name)
+    .replace(/পছন্দ\s+করি/g, "পছন্দ করে")
+    .replace(/ব্যবহার\s+করি/g, "ব্যবহার করে")
+    .replace(/করি/g, "করে")
+    .replace(/থাকি/g, "থাকে")
+    .replace(/যাই/g, "যায়")
+    .replace(/খাই/g, "খায়")
+    .replace(/খেলি/g, "খেলে")
+    .replace(/দেখি/g, "দেখে")
+    .replace(/বলি/g, "বলে")
+    .replace(/চাই/g, "চায়")
+    .replace(/পড়ি/g, "পড়ে")
+    .replace(/ভালোবাসি/g, "ভালোবাসে");
+}
 app.get('/api/health',(q,s)=>s.json({ok:true}));
 app.get('/api/settings',async(q,s)=>{try{let r=await pool.query("SELECT value FROM site_settings WHERE key='profile'");s.json(r.rows[0]?.value||{displayName:'Your Name',avatar:'',links:[{label:'Instagram',url:''},{label:'Facebook',url:''},{label:'YouTube',url:''}]})}catch{s.status(500).json({error:'Could not load settings'})}});
 app.post('/creator-room-7f3c/login',async(q,s)=>{if(!await bcrypt.compare(String(q.body?.password||''),process.env.ADMIN_PASSWORD_HASH))return s.status(401).json({error:'Incorrect password'});q.session.isAdmin=true;s.json({ok:true})});app.post('/creator-room-7f3c/logout',(q,s)=>q.session.destroy(()=>s.json({ok:true})));app.get('/api/admin/me',admin,(q,s)=>s.json({ok:true}));
@@ -297,7 +320,7 @@ app.post('/api/friend-quizzes/:id/start', async (req, res) => {
 
       return {
         id: q.id,
-        prompt: q.prompt.replace(/আমার/g, creatorName),
+        prompt: personalizeFriendQuestion(q.prompt, creatorName),
         options: choices
       };
     });
@@ -333,9 +356,12 @@ app.post('/api/friend-quiz-sessions/:id/submit', async (req, res) => {
   const c = await pool.connect();
   try {
     const sr = await c.query(
-      'SELECT quiz_id, question_order FROM friend_quiz_sessions WHERE id=$1',
-      [req.params.id]
-    );
+  `SELECT s.quiz_id, s.question_order, q.creator_name
+   FROM friend_quiz_sessions s
+   JOIN friend_quizzes q ON q.id = s.quiz_id
+   WHERE s.id=$1`,
+  [req.params.id]
+);
     if (!sr.rowCount)
       return res.status(404).json({ error: 'Session not found' });
 
@@ -369,7 +395,12 @@ app.post('/api/friend-quiz-sessions/:id/submit', async (req, res) => {
 
     const review = order.map(id => {
   const q = r.rows.find(item => String(item.id) === String(id));
-  return { question: q.prompt, playerAnswer: saved[id] || '', correctAnswer: q.creator_answer, isCorrect: saved[id] === q.creator_answer };
+  return {
+  question: personalizeFriendQuestion(q.prompt, sr.rows[0].creator_name),
+  playerAnswer: saved[id] || '',
+  correctAnswer: q.creator_answer,
+  isCorrect: saved[id] === q.creator_answer
+};
 });
 res.json({ score, total: order.length, review });
   } catch {
