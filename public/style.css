@@ -566,6 +566,8 @@ input,textarea,select{border:2px solid var(--pink)!important;border-radius:14px!
   width: 100%;
   height: auto;
   border-radius: 0;
+  background: #fff8fb;
+  box-shadow: 0 0 18px 12px #fff8fb;
 }
 
 /* Animated cartoon friends around the logo */
