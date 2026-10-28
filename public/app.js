@@ -412,6 +412,8 @@ async function submitPlay() {
 
 async function loadWebsiteQuestions() {
   const container = $("websiteQuestionList");
+  const intro = $("websiteModeIntro");
+if (intro) intro.classList.remove("hidden");
   if (!container) return;
 
   const score = $("websiteScore");
@@ -594,6 +596,8 @@ if (!allQuestions.length) {
       let current = 0;
       let creating = false;
 
+     const intro = $("websiteModeIntro");
+if (intro) intro.classList.add("hidden");
       const wrap = startButton.closest(".ff-wrap");
 
 wrap.innerHTML = `
@@ -763,11 +767,16 @@ async function advance() {
         <div class="ff-share-options">
           <button type="button" id="ffCopyLink">📋 Copy Link</button>
           <button type="button" id="ffWhatsApp">🟢 WhatsApp</button>
+          <button type="button" id="ffInstagram">📸 Instagram</button>
           <button type="button" id="ffFacebook">🔵 Facebook</button>
           <button type="button" id="ffMessenger">💬 Messenger</button>
           <button type="button" id="ffTelegram">✈️ Telegram</button>
-          <button type="button" id="ffInstagram">📸 Instagram</button>
         </div>
+
+        <p style="text-align:center;color:#e0c5ff;font-size:14px;line-height:1.7;margin-top:16px">
+          তোমার বন্ধুদের স্কোর জানতে তোমার পাঠানো লিংকে ক্লিক করে স্কোরবোর্ডে জানতে পারো
+        </p>
+
       </div>
       <div class="ff-share-side">🐼</div>
     </div>
