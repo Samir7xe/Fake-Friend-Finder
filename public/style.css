@@ -594,10 +594,7 @@ input,textarea,select{border:2px solid var(--pink)!important;border-radius:14px!
 }
 
 /* Animated cartoon friends around the logo */
-.logo-frame {
-  position: relative;
-  animation: logoBorderGlow 2s ease-in-out infinite alternate;
-}
+
 
 .floating-mascots {
   display: flex;
