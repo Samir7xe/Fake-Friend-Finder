@@ -529,7 +529,7 @@ async function loadWebsiteQuestions() {
 
 <label class="ff-label">কতটি প্রশ্ন থাকবে?</label>
 <div class="ff-choice-row">
-  <<button type="button" class="ff-choice" data-count="10">10 QUESTIONS</button>
+  <button type="button" class="ff-choice" data-count="10">10 QUESTIONS</button>
   <button type="button" class="ff-choice" data-count="15">15 QUESTIONS</button>
 </div>
 
