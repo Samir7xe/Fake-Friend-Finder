@@ -523,13 +523,13 @@ async function loadWebsiteQuestions() {
 
           <label class="ff-label">তোমার Gender বেছে নাও</label>
 <div class="ff-choice-row">
-  <button type="button" class="ff-choice selected" data-gender="Male">MALE</button>
+  <button type="button" class="ff-choice" data-gender="Male">MALE</button>
   <button type="button" class="ff-choice" data-gender="Female">FEMALE</button>
 </div>
 
 <label class="ff-label">কতটি প্রশ্ন থাকবে?</label>
 <div class="ff-choice-row">
-  <button type="button" class="ff-choice selected" data-count="10">10 QUESTIONS</button>
+  <<button type="button" class="ff-choice" data-count="10">10 QUESTIONS</button>
   <button type="button" class="ff-choice" data-count="15">15 QUESTIONS</button>
 </div>
 
@@ -545,9 +545,8 @@ async function loadWebsiteQuestions() {
 
     const startButton = $("ffStart");
 let area = $("ffQuestionArea");
-let selectedGender = "Male";
-let selectedCount = 10;
-
+let selectedGender = "";
+let selectedCount = null;
 document.querySelectorAll("[data-gender]").forEach(button => {
   button.addEventListener("click", () => {
     selectedGender = button.dataset.gender;
@@ -569,6 +568,15 @@ document.querySelectorAll("[data-count]").forEach(button => {
     startButton.addEventListener("click", () => {
       const name = $("friendCreatorName").value.trim();
       const count = selectedCount;
+      if (!selectedGender) {
+  alert("আগে Gender সিলেক্ট করো।");
+  return;
+}
+
+if (selectedCount === null) {
+  alert("আগে প্রশ্নের সংখ্যা সিলেক্ট করো।");
+  return;
+}
 if (!allQuestions.length) {
   alert("প্রশ্নভান্ডারে কোনো প্রশ্ন নেই।");
   return;
