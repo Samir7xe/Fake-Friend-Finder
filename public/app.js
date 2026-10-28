@@ -1475,7 +1475,7 @@ async function loadFriendQuiz(id) {
                 content.innerHTML = `
             <button type="button" id="friendResultHome"
               style="display:block;width:100%;min-height:64px;margin:0 0 20px;padding:16px;font-size:22px;font-weight:800;border-radius:14px;">
-              হোমে ফিরুন
+              এবার তোমার কুইজ তৈরি করার পালা🐶
             </button>
             <div class="question-card">
               <h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3>
