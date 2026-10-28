@@ -548,34 +548,47 @@ input,textarea,select{border:2px solid var(--pink)!important;border-radius:14px!
   border-radius: 14px;
 }
 
-
-.welcome-title {
-  display: block;
-  width: fit-content;
-  max-width: 100%;
-  margin: 14px auto 20px;
-  padding: 14px 18px;
-  text-align: center;
-  font-size: clamp(25px, 6vw, 36px);
-  font-weight: 900;
-  line-height: 1.35;
-  letter-spacing: 0.3px;
-  color: #ff70bd;
-  background: linear-gradient(145deg, #17132e, #302052);
-  border: 2px solid #ff70bd;
-  border-radius: 18px;
+/* Real Friend Finder animated logo frame */
+.logo-frame {
+  width: 100%;
+  max-width: 460px;
+  margin: 18px auto 24px;
+  padding: 5px;
+  border: 3px solid #ff70b7;
+  border-radius: 24px;
+  background: #17171c;
   box-shadow:
-    0 0 8px #ff4fa366,
-    0 0 22px #a34dff44,
-    inset 0 0 12px #ff70bd18;
-  text-shadow: 0 2px 0 #6e285c;
+    0 0 0 3px #ffdf62,
+    0 0 12px #ff70b7,
+    0 0 25px #ff70b7,
+    0 0 35px #ffdf6266;
+  animation: logoBorderGlow 2s ease-in-out infinite alternate;
 }
 
-.welcome-title span {
+.friend-finder-logo {
   display: block;
-  color: #ffffff;
-  font-weight: 900;
-  text-shadow:
-    0 0 5px #ff70bd,
-    0 0 12px #a34dff;
+  width: 100%;
+  height: auto;
+  border-radius: 17px;
+}
+
+@keyframes logoBorderGlow {
+  from {
+    box-shadow:
+      0 0 0 3px #ffdf62,
+      0 0 10px #ff70b7,
+      0 0 18px #ff70b7;
+  }
+  to {
+    box-shadow:
+      0 0 0 4px #ffdf62,
+      0 0 20px #ff70b7,
+      0 0 35px #ffdf62;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-frame {
+    animation: none;
+  }
 }
