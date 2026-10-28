@@ -592,3 +592,68 @@ input,textarea,select{border:2px solid var(--pink)!important;border-radius:14px!
     animation: none;
   }
 }
+
+/* Animated cartoon friends around the logo */
+.logo-frame {
+  position: relative;
+  animation: logoBorderGlow 2s ease-in-out infinite alternate;
+}
+
+.floating-mascots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin: 12px auto 18px;
+}
+
+.mascot {
+  display: inline-block;
+  font-size: 38px;
+  transform-origin: center bottom;
+  filter: drop-shadow(0 0 7px #ff70b7);
+}
+
+.teddy {
+  animation: teddyNod 1.8s ease-in-out infinite;
+}
+
+.panda {
+  animation: pandaSway 2s ease-in-out infinite;
+}
+
+.bunny {
+  animation: bunnyHop 1.5s ease-in-out infinite;
+}
+
+.cat {
+  animation: catBounce 1.2s ease-in-out infinite;
+}
+
+@keyframes teddyNod {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-12deg); }
+}
+
+@keyframes pandaSway {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+
+@keyframes bunnyHop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes catBounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(8deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot,
+  .logo-frame {
+    animation: none !important;
+  }
+}
