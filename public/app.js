@@ -2293,17 +2293,48 @@ if (siteFooter) siteFooter.style.display = "none";
       function renderQuestion() {
         const q = questions[currentIndex];
         content.innerHTML = `
-          <p class="muted">প্রশ্ন ${Object.keys(answers).length + 1} / ${questions.length}</p>
-          <div class="question-card">
-            <h3>${esc(q.prompt)}</h3>
-            <div class="friend-answer-list">
-              ${q.options.map((option, i) => `<button type="button" class="answer-choice ${answers[q.id] === option ? "selected" : ""}" data-answer-index="${i}">${esc(option)}</button>`).join("")}
-            </div>
-          </div>
-          <div class="friend-nav">
-            <button type="button" id="friendBackButton" class="back" ${history.length ? "" : "disabled"}>Back</button>
-            <p class="friendship-footer">Made with ✦ for real friendships</p>
-          </div>`;
+  <p class="muted">প্রশ্ন ${Object.keys(answers).filter(k => answers[k] !== "").length + 1} / ${questions.length}</p>
+
+  <div class="ff-board-stage">
+    <div class="ff-paper-board">
+      <div class="ff-board-question">
+        ${esc(q.prompt)}
+      </div>
+    </div>
+
+    <div class="ff-paper-holes" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+      <span></span>
+    </div>
+
+    <div class="ff-question-leaf">
+      ${String(currentIndex + 1).padStart(2, "0")}
+    </div>
+
+    <div class="ff-board-pen" aria-hidden="true"></div>
+  </div>
+
+  <div class="ff-options-scroll">
+    <div class="ff-options">
+      ${q.options.map((option, i) => `
+        <button type="button"
+          class="ff-option answer-choice ${answers[q.id] === option ? "selected" : ""}"
+          data-answer-index="${i}">
+          ${esc(option)}
+        </button>
+      `).join("")}
+    </div>
+  </div>
+
+  <div class="ff-actions">
+    <button type="button" id="friendBackButton"
+      class="ff-btn ff-back" ${history.length ? "" : "disabled"}>
+      ← Back
+    </button>
+    <p class="friendship-footer">Made with ✦ for real friendships</p>
+  </div>
+`;
         
            updateLanguageVisibility();
 
