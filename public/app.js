@@ -666,21 +666,6 @@ if (intro) intro.classList.remove("hidden");
   <div class="ff-cloud ff-cloud-two"></div>
   <div class="ff-character" aria-label="ভাসমান কার্টুন চরিত্র">🐻</div>
 </div>
-            <svg viewBox="0 0 180 145" width="150" role="img">
-              <circle cx="48" cy="35" r="24" fill="#b8b8c2"/>
-              <circle cx="132" cy="35" r="24" fill="#b8b8c2"/>
-              <circle cx="48" cy="35" r="13" fill="#ededf2"/>
-              <circle cx="132" cy="35" r="13" fill="#ededf2"/>
-              <ellipse cx="90" cy="82" rx="59" ry="54" fill="#d8d8e0"/>
-              <ellipse cx="90" cy="99" rx="36" ry="27" fill="#f8f4f7"/>
-              <circle cx="72" cy="76" r="5" fill="#292638"/>
-              <circle cx="108" cy="76" r="5" fill="#292638"/>
-              <ellipse cx="90" cy="91" rx="7" ry="5" fill="#62596d"/>
-              <path d="M82 100 Q90 108 98 100" fill="none" stroke="#62596d" stroke-width="3" stroke-linecap="round"/>
-              <circle cx="60" cy="91" r="8" fill="#f1a8bd" opacity=".7"/>
-              <circle cx="120" cy="91" r="8" fill="#f1a8bd" opacity=".7"/>
-            </svg>
-          </div>
 
           <div class="ff-speech" id="ffSpeech">
             তোমার নাম কী?
