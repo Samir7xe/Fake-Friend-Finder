@@ -1010,24 +1010,6 @@ if (intro) intro.classList.remove("hidden");
   overflow: hidden;
 }
 
-.ff-paper-board {
-  inset: 0;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  filter: none;
-  clip-path: none;
-}
-
-.ff-paper-holes,
-.ff-board-pen,
-.ff-question-leaf,
-.ff-paper-board::before,
-.ff-paper-board::after {
-  display: none;
-}
-
 .ff-board-question {
   inset: 4%;
   display: flex;
