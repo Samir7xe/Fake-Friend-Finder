@@ -939,9 +939,9 @@ if (intro) intro.classList.remove("hidden");
   position: relative;
   isolation: isolate;
   width: 100%;
-  height: 100dvh;
+  height: auto;
   min-height: 0;
-  max-height: 100dvh;
+  max-height: calc(100dvh - 16px);
   margin: 0;
   padding: 8px;
   overflow: hidden;
@@ -978,7 +978,8 @@ if (intro) intro.classList.remove("hidden");
 }
 
 .ff-wrap .ff-question-board-card #ffQuestionArea {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  max-height: calc(100dvh - 170px);
   min-height: 0;
   overflow: hidden;
 }
