@@ -664,8 +664,9 @@ if (intro) intro.classList.remove("hidden");
   .ff-character { font-size: 92px; }
 }
       </style>
+      <div class="ff-wrap">
+  <div class="ff-card">
 
-          
 <button type="button" class="ff-home" id="ffHome">← হোম</button>
 
 <div class="ff-sky">
@@ -762,7 +763,6 @@ if (intro) intro.classList.remove("hidden");
     renderSetupStep();
 
     startButton.addEventListener("click", () => {
-      alert("বাটনে ক্লিক ধরা পড়েছে!");
       if (setupStep === 0) {
         name = $("friendCreatorName").value.trim();
 
