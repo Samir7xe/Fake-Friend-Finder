@@ -797,6 +797,11 @@ if (intro) intro.classList.remove("hidden");
       }
 
       const count = selectedCount;
+      console.log("Quiz start clicked");
+console.log("Selected count:", selectedCount);
+console.log("Available questions:", allQuestions.length);
+console.log("Start button:", startButton);
+console.log("Quiz wrapper:", startButton.closest(".ff-wrap"));
 
       const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
       const questions = shuffled;
