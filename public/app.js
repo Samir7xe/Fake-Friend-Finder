@@ -555,15 +555,20 @@ if (intro) intro.classList.remove("hidden");
 }
 
 .ff-home {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
   display: block;
   width: fit-content;
   padding: 8px 16px;
-  margin: 0 0 4px;
+  margin: 0;
   border: 2px solid white;
   border-radius: 14px;
   background: #ffffffdd;
   color: #34345c;
   font-weight: 800;
+  cursor: pointer;
 }
 
 .ff-sky {
