@@ -1478,7 +1478,8 @@ async function advance() {
 
           area.innerHTML = `
   <div style="margin-top:30px;text-align:center">
-    <h3 style="color:#e0c5ff">🎉 তোমার বন্ধুদের শেয়ার করো..!! ☺️</h3>
+  <h2 class="ff-title">Wah..!👏 তোমার কুইজ তৈরি ☺️</h2>
+    <h3 style="color:#e0c5ff">☄️ বন্ধুদের পাঠাও আর দেখো কে সত্যিই তোমাকে চেনে 🎀</h3>
     <div class="ff-share-layout">
       <div class="ff-share-side">🐻</div>
       <div class="ff-share-main">
