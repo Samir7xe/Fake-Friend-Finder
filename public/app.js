@@ -925,6 +925,211 @@ if (intro) intro.classList.remove("hidden");
     padding: 7px;
   }
 }
+/* Question board: single background and faint artwork */
+.ff-wrap:has(.ff-question-board-card) {
+  width: 100%;
+  max-width: 680px;
+  height: 100dvh;
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.ff-wrap .ff-question-board-card {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 8px;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+  background: #eaf5fb;
+}
+
+.ff-wrap .ff-question-board-card::before {
+  content: "✦   ✧   ☁   ♡   ✧   ✦   ♡   ☁";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  overflow: hidden;
+  color: #7da4c0;
+  opacity: 0.13;
+  font-size: clamp(28px, 9vw, 66px);
+  line-height: 2.2;
+  letter-spacing: 10px;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+.ff-wrap .ff-question-board-card .ff-title {
+  flex: 0 0 auto;
+  margin: 2px 0 5px;
+}
+
+.ff-wrap .ff-question-board-card #ffQuestionArea {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ff-question-layout {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.ff-question-status {
+  flex: 0 0 auto;
+  text-align: center;
+  color: #243746;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Keep the question board within the available space */
+.ff-board-stage {
+  flex: 0 0 auto;
+  width: 100%;
+  max-height: 30dvh;
+  margin: 0 auto 2px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.ff-paper-board {
+  inset: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  filter: none;
+  clip-path: none;
+}
+
+.ff-paper-holes,
+.ff-board-pen,
+.ff-question-leaf,
+.ff-paper-board::before,
+.ff-paper-board::after {
+  display: none;
+}
+
+.ff-board-question {
+  inset: 4%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.15;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* Only the options area scrolls */
+.ff-options-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #8a9ca8 transparent;
+  border: 1px solid #9eb4c2;
+  border-radius: 0;
+  padding: 4px;
+  box-sizing: border-box;
+  touch-action: pan-y;
+}
+
+.ff-options-scroll .ff-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  padding: 0 0 4px;
+}
+
+.ff-options-scroll .ff-option {
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 5px;
+  border-radius: 0;
+  font-size: 14px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* Back and Ignore: matching black, square-corner buttons */
+.ff-question-layout .ff-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding-top: 2px;
+}
+
+.ff-question-layout .ff-actions .ff-btn {
+  flex: 1 1 0;
+  min-height: 42px;
+  padding: 9px 8px;
+  border: 1px solid #000;
+  border-radius: 0;
+  background: #000;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: none;
+}
+
+.ff-question-layout .ff-actions .ff-btn:disabled {
+  opacity: 0.4;
+}
+
+.ff-question-layout .ff-actions .ff-btn:active {
+  background: #292929;
+}
+
+@media (max-height: 650px) {
+  .ff-wrap .ff-question-board-card {
+    padding: 5px;
+  }
+
+  .ff-question-layout {
+    gap: 4px;
+  }
+
+  .ff-board-stage {
+    max-height: 25dvh;
+  }
+
+  .ff-options-scroll .ff-option {
+    min-height: 34px;
+    padding: 6px 4px;
+    font-size: 12px;
+  }
+
+  .ff-question-layout .ff-actions .ff-btn {
+    min-height: 36px;
+    padding: 6px;
+  }
+}
       </style>
       <div class="ff-wrap">
   <div class="ff-card">
@@ -1096,18 +1301,22 @@ area = $("ffQuestionArea");
         ).length;
         
         const questionFontSize = Math.max(
-          12,
-          Math.min(
-            27,
-            Math.floor(27 - Math.max(0, q.question.length - 35) * 0.22)
-          )
-        );
+  10,
+  Math.min(
+    27,
+    Math.floor(
+      Math.min(
+        27,
+        360 / Math.max(1, q.question.length) * 1.8
+      )
+    )
+  )
+);
 
         area.innerHTML = `
           <div class="ff-question-layout">
             <div class="ff-question-status">
-              <div>প্রশ্ন ${current + 1} / ${questions.length}</div>
-              <div>নির্বাচিত ${selectedCount} / ${count}</div>
+              <div>Selected ${selectedCount} / ${count}</div>
               <div class="ff-progress">
                 <div style="width:${(selectedCount / count) * 100}%"></div>
               </div>
