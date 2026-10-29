@@ -665,7 +665,7 @@ if (intro) intro.classList.remove("hidden");
 }
 
 /* Question board — design only */
-.ff-wrap:has(#ffQuestionArea) {
+.ff-wrap:has(.ff-question-board-card) {
   width: 100%;
   max-width: 680px;
   margin: 0 auto;
@@ -673,7 +673,7 @@ if (intro) intro.classList.remove("hidden");
   box-sizing: border-box;
 }
 
-.ff-wrap:has(#ffQuestionArea) .ff-card {
+.ff-wrap .ff-question-board-card {
   height: calc(100dvh - 16px);
   min-height: 0;
   max-height: calc(100dvh - 16px);
@@ -685,13 +685,13 @@ if (intro) intro.classList.remove("hidden");
   background: linear-gradient(180deg, #eaf7ff, #fff3f8);
 }
 
-.ff-wrap:has(#ffQuestionArea) .ff-title {
+.ff-wrap .ff-question-board-card .ff-title {
   flex: 0 0 auto;
   margin: 2px 0 8px;
   font-size: clamp(16px, 4vw, 22px);
 }
 
-.ff-wrap:has(#ffQuestionArea) #ffQuestionArea {
+.ff-wrap .ff-question-board-card #ffQuestionArea {
   min-height: 0;
   flex: 1;
   display: flex;
@@ -903,7 +903,7 @@ if (intro) intro.classList.remove("hidden");
 }
 
 @media (max-height: 650px) {
-  .ff-wrap:has(#ffQuestionArea) .ff-card {
+  .ff-wrap .ff-question-board-card {
     padding: 6px;
   }
 
@@ -1079,10 +1079,10 @@ if (intro) intro.classList.add("hidden");
       const wrap = startButton.closest(".ff-wrap");
 
 wrap.innerHTML = `
-  <div class="ff-card">
-    <h2 class="ff-title">🦥বন্ধুত্বের আসল পরীক্ষা!🐰</h2>
-    <div id="ffQuestionArea"></div>
-  </div>
+  <div class="ff-card ff-question-board-card">
+  <h2 class="ff-title">🦥বন্ধুত্বের আসল পরীক্ষা!🐰</h2>
+  <div id="ffQuestionArea"></div>
+</div>
 `;
 
 area = $("ffQuestionArea");
