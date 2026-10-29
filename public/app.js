@@ -2166,17 +2166,245 @@ if (siteFooter) siteFooter.style.display = "none";
   }
 
   view.innerHTML = `
+  <style>
+    #friendPlayView {
+      --sky-height: min(56.25vw, 100vh);
+    }
+
+    #friendPlayView .friend-landing-wrap {
+      width: 100%;
+      max-width: none;
+      margin: 0 auto;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    #friendPlayView .friend-landing-card {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      padding: 0 16px 22px;
+      box-sizing: border-box;
+      border: 0;
+      border-radius: 0;
+      color: #34345c;
+      background: linear-gradient(180deg, #fff0f8, #f8f5ff);
+      box-shadow: none;
+    }
+
+    #friendPlayView .friend-landing-sky {
+      position: relative;
+      width: 100vw;
+      max-width: none;
+      aspect-ratio: 16 / 9;
+      min-height: 210px;
+      margin-left: calc(50% - 50vw);
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+      background: linear-gradient(180deg, #72cfff 0%, #b8eaff 68%, #f8f5ff 100%);
+    }
+
+    #friendPlayView .friend-landing-sky::after {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      inset: 60% 0 0;
+      background: linear-gradient(180deg, transparent, #f8f5ff 100%);
+      pointer-events: none;
+    }
+
+    #friendPlayView .friend-landing-cloud {
+      position: absolute;
+      width: 130px;
+      height: 38px;
+      border-radius: 40px;
+      background: #ffffffd9;
+      filter: drop-shadow(0 5px 8px #4a9ccc22);
+    }
+
+    #friendPlayView .friend-landing-cloud::before,
+    #friendPlayView .friend-landing-cloud::after {
+      content: "";
+      position: absolute;
+      bottom: 8px;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      background: inherit;
+    }
+
+    #friendPlayView .friend-landing-cloud::before { left: 16px; }
+    #friendPlayView .friend-landing-cloud::after {
+      right: 12px;
+      width: 42px;
+      height: 42px;
+    }
+
+    #friendPlayView .landing-cloud-a {
+      top: 20%;
+      left: -160px;
+      animation: landingCloudRight 13s linear infinite;
+    }
+
+    #friendPlayView .landing-cloud-b {
+      top: 48%;
+      right: -160px;
+      transform: scale(.8);
+      animation: landingCloudLeft 17s linear infinite;
+    }
+
+    #friendPlayView .landing-cloud-c {
+      top: 12%;
+      right: -160px;
+      transform: scale(1.15);
+      opacity: .8;
+      animation: landingCloudLeft 22s linear infinite;
+      animation-delay: -8s;
+    }
+
+    #friendPlayView .friend-landing-bear {
+      position: relative;
+      z-index: 2;
+      align-self: end;
+      margin-bottom: 7%;
+      font-size: clamp(100px, 17vw, 190px);
+      line-height: 1;
+      filter: drop-shadow(0 12px 8px #536aa533);
+      transform-origin: center bottom;
+      animation: landingBearFloat 2.8s ease-in-out infinite;
+    }
+
+    #friendPlayView .friend-landing-speech {
+      position: absolute;
+      z-index: 4;
+      top: 10%;
+      left: 50%;
+      width: max-content;
+      max-width: min(82%, 460px);
+      padding: 10px 17px;
+      box-sizing: border-box;
+      transform: translateX(-50%);
+      border: 3px solid white;
+      border-radius: 22px;
+      background: #ffffffed;
+      color: #34345c;
+      text-align: center;
+      font-size: clamp(16px, 3.5vw, 24px);
+      font-weight: 900;
+      box-shadow: 0 5px 0 #b6dfff;
+      animation: landingSpeechIn .6s ease both;
+    }
+
+    #friendPlayView .friend-landing-speech::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -12px;
+      width: 18px;
+      height: 18px;
+      background: #ffffffed;
+      border-right: 3px solid white;
+      border-bottom: 3px solid white;
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    #friendPlayView .ff-home {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 8;
+    }
+
+    #friendPlayView #friendPlayContent {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    #friendPlayView .ff-label {
+      display: block;
+      margin: 18px 0 8px;
+      color: #34345c;
+      font-size: 15px;
+    }
+
+    #friendPlayView .ff-input {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px;
+      border: 2px solid white;
+      border-radius: 12px;
+      background: #ffffffed;
+      color: #34345c;
+    }
+
+    #friendPlayView .ff-start {
+      width: 100%;
+      padding: 15px;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(90deg, #913bdb, #e044b6);
+      color: white;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    #friendPlayView .friendship-footer {
+      width: 100%;
+      margin: 18px auto;
+      text-align: center;
+      color: #77728b;
+      opacity: .58;
+      font-size: 13px;
+    }
+
+    @keyframes landingCloudRight {
+      from { left: -160px; }
+      to { left: calc(100% + 160px); }
+    }
+
+    @keyframes landingCloudLeft {
+      from { right: -160px; }
+      to { right: calc(100% + 160px); }
+    }
+
+    @keyframes landingBearFloat {
+      0%, 100% { transform: translateY(4px) rotate(-2deg); }
+      50% { transform: translateY(-10px) rotate(2deg); }
+    }
+
+    @keyframes landingSpeechIn {
+      from { opacity: 0; translate: 0 10px; }
+      to { opacity: 1; translate: 0 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #friendPlayView .friend-landing-cloud,
+      #friendPlayView .friend-landing-bear,
+      #friendPlayView .friend-landing-speech {
+        animation: none !important;
+      }
+    }
+  </style>
+
   <div class="ff-wrap friend-landing-wrap">
     <div class="ff-card friend-landing-card">
       <button type="button" class="ff-home" id="friendPlayHome">← হোম</button>
 
-      <div class="ff-sky">
-        <div class="ff-cloud ff-cloud-one"></div>
-        <div class="ff-cloud ff-cloud-two"></div>
-        <div class="ff-character" aria-label="ভাসমান কার্টুন চরিত্র">🐻</div>
+      <div class="friend-landing-sky">
+        <div class="friend-landing-cloud landing-cloud-a"></div>
+        <div class="friend-landing-cloud landing-cloud-b"></div>
+        <div class="friend-landing-cloud landing-cloud-c"></div>
+        <div class="friend-landing-bear" aria-label="কার্টুন ভালুক">🐻</div>
+        <div class="friend-landing-speech" id="friendPlayTitle"></div>
       </div>
 
-      <div class="ff-speech" id="friendPlayTitle"></div>
       <div id="friendPlayContent"></div>
       <p id="friendPlayResult"></p>
     </div>
@@ -2185,9 +2413,9 @@ if (siteFooter) siteFooter.style.display = "none";
 
   $("friendPlayTitle").textContent = `তুমি ${quiz.creatorName}-কে কতটা চেনো?`;
   $("friendPlayHome").onclick = () => {
-  if (siteFooter) siteFooter.style.display = "";
-  show("home");
-};
+    if (siteFooter) siteFooter.style.display = "";
+    show("home");
+  };
 
   const content = $("friendPlayContent");
   const resultBox = $("friendPlayResult");
