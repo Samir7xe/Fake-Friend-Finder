@@ -1029,8 +1029,9 @@ if (intro) intro.classList.remove("hidden");
 
 /* Only the options area scrolls */
 .ff-options-scroll {
-  flex: 1 1 0;
+  flex: 0 1 40dvh;
   min-height: 0;
+  max-height: 40dvh;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
