@@ -550,7 +550,7 @@ if (intro) intro.classList.remove("hidden");
           <div id="ffQuestionArea"></div>
         </div>
       </div>
-
+      `;
     
     const startButton = $("ffStart");
     let area = $("ffQuestionArea");
