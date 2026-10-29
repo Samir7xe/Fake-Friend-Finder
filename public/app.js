@@ -515,78 +515,145 @@ if (intro) intro.classList.remove("hidden");
         }
       </style>
 
-      <div class="ff-wrap">
+          <div class="ff-wrap">
         <div class="ff-card">
-          <h2 class="ff-title">✨ Friend Quiz ✨</h2>
+          <div class="ff-mascot" aria-hidden="true">
+            <svg viewBox="0 0 180 145" width="150" role="img">
+              <circle cx="48" cy="35" r="24" fill="#b8b8c2"/>
+              <circle cx="132" cy="35" r="24" fill="#b8b8c2"/>
+              <circle cx="48" cy="35" r="13" fill="#ededf2"/>
+              <circle cx="132" cy="35" r="13" fill="#ededf2"/>
+              <ellipse cx="90" cy="82" rx="59" ry="54" fill="#d8d8e0"/>
+              <ellipse cx="90" cy="99" rx="36" ry="27" fill="#f8f4f7"/>
+              <circle cx="72" cy="76" r="5" fill="#292638"/>
+              <circle cx="108" cy="76" r="5" fill="#292638"/>
+              <ellipse cx="90" cy="91" rx="7" ry="5" fill="#62596d"/>
+              <path d="M82 100 Q90 108 98 100" fill="none" stroke="#62596d" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="60" cy="91" r="8" fill="#f1a8bd" opacity=".7"/>
+              <circle cx="120" cy="91" r="8" fill="#f1a8bd" opacity=".7"/>
+            </svg>
+          </div>
 
-          <label class="ff-label" for="friendCreatorName">তোমার নাম</label>
-          <input class="ff-input" id="friendCreatorName"
-            maxlength="50" placeholder="নিজের নাম লেখো">
+          <div class="ff-speech" id="ffSpeech">
+            তোমার নাম কী?
+          </div>
 
-          <label class="ff-label">তোমার Gender বেছে নাও</label>
-<div class="ff-choice-row">
-  <button type="button" class="ff-choice" data-gender="Male">MALE</button>
-  <button type="button" class="ff-choice" data-gender="Female">FEMALE</button>
-</div>
-
-<label class="ff-label">কতটি প্রশ্ন থাকবে?</label>
-<div class="ff-choice-row">
-  <button type="button" class="ff-choice" data-count="10">10 QUESTIONS</button>
-  <button type="button" class="ff-choice" data-count="15">15 QUESTIONS</button>
-</div>
+          <div id="ffSetupStep">
+            <label class="ff-label" for="friendCreatorName">তোমার নাম লেখো</label>
+            <input class="ff-input" id="friendCreatorName"
+              maxlength="50" placeholder="এখানে নাম লেখো">
+          </div>
 
           <button type="button" class="ff-start" id="ffStart"
-            style="margin-top:22px">
-            Next ➜
-          </button>
+            style="margin-top:22px">Next ➜</button>
 
           <div id="ffQuestionArea"></div>
         </div>
       </div>
-    `;
 
+    
     const startButton = $("ffStart");
-let area = $("ffQuestionArea");
-let selectedGender = "";
-let selectedCount = null;
-document.querySelectorAll("[data-gender]").forEach(button => {
-  button.addEventListener("click", () => {
-    selectedGender = button.dataset.gender;
-    document.querySelectorAll("[data-gender]").forEach(b => {
-      b.classList.toggle("selected", b === button);
-    });
-  });
-});
+    let area = $("ffQuestionArea");
+    let selectedGender = "";
+    let selectedCount = null;
+    let name = "";
+    let setupStep = 0;
 
-document.querySelectorAll("[data-count]").forEach(button => {
-  button.addEventListener("click", () => {
-    selectedCount = Number(button.dataset.count);
-    document.querySelectorAll("[data-count]").forEach(b => {
-      b.classList.toggle("selected", b === button);
-    });
-  });
-});
+    function renderSetupStep() {
+      const stepArea = $("ffSetupStep");
+      const speech = $("ffSpeech");
+
+      if (setupStep === 0) {
+        speech.textContent = "তোমার নাম কী?";
+        stepArea.innerHTML = `
+          <label class="ff-label" for="friendCreatorName">
+            তোমার নাম লেখো
+          </label>
+          <input class="ff-input" id="friendCreatorName"
+            maxlength="50" placeholder="এখানে নাম লেখো">
+        `;
+      } else if (setupStep === 1) {
+        speech.textContent = "তোমার Gender কী?";
+        stepArea.innerHTML = `
+          <div class="ff-choice-row">
+            <button type="button" class="ff-choice"
+              data-gender="Male">MALE</button>
+            <button type="button" class="ff-choice"
+              data-gender="Female">FEMALE</button>
+          </div>
+        `;
+
+        stepArea.querySelectorAll("[data-gender]").forEach(button => {
+          button.addEventListener("click", () => {
+            selectedGender = button.dataset.gender;
+            stepArea.querySelectorAll("[data-gender]").forEach(b => {
+              b.classList.toggle("selected", b === button);
+            });
+          });
+        });
+      } else {
+        speech.textContent = "কয়টি প্রশ্নের উত্তর দেবে?";
+        stepArea.innerHTML = `
+          <div class="ff-choice-row">
+            <button type="button" class="ff-choice"
+              data-count="10">১০টি প্রশ্ন</button>
+            <button type="button" class="ff-choice"
+              data-count="15">১৫টি প্রশ্ন</button>
+          </div>
+        `;
+
+        stepArea.querySelectorAll("[data-count]").forEach(button => {
+          button.addEventListener("click", () => {
+            selectedCount = Number(button.dataset.count);
+            stepArea.querySelectorAll("[data-count]").forEach(b => {
+              b.classList.toggle("selected", b === button);
+            });
+          });
+        });
+      }
+
+      startButton.textContent =
+        setupStep === 2 ? "প্রশ্ন শুরু করো ♡" : "Next ➜";
+    }
+
+    renderSetupStep();
 
     startButton.addEventListener("click", () => {
-      const name = $("friendCreatorName").value.trim();
-      const count = selectedCount;
-      if (!selectedGender) {
-  alert("আগে Gender সিলেক্ট করো।");
-  return;
-}
+      if (setupStep === 0) {
+        name = $("friendCreatorName").value.trim();
 
-if (selectedCount === null) {
-  alert("আগে প্রশ্নের সংখ্যা সিলেক্ট করো।");
-  return;
-}
-if (!allQuestions.length) {
-  alert("প্রশ্নভান্ডারে কোনো প্রশ্ন নেই।");
-  return;
-}
-      if (!name) {
-        alert("আগে নিজের নাম লেখো।");
+        if (!name) {
+          alert("আগে নিজের নাম লেখো।");
+          return;
+        }
+
+        setupStep = 1;
+        renderSetupStep();
         return;
       }
+
+      if (setupStep === 1) {
+        if (!selectedGender) {
+          alert("আগে Gender সিলেক্ট করো।");
+          return;
+        }
+
+        setupStep = 2;
+        renderSetupStep();
+        return;
+      }
+
+      if (selectedCount === null) {
+        alert("আগে প্রশ্নের সংখ্যা সিলেক্ট করো।");
+        return;
+      }
+
+      if (!allQuestions.length) {
+        alert("প্রশ্নভান্ডারে কোনো প্রশ্ন নেই।");
+        return;
+      }
+
+      const count = selectedCount;
 
       const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
       const questions = shuffled;
