@@ -2395,7 +2395,6 @@ if (siteFooter) siteFooter.style.display = "none";
 
   <div class="ff-wrap friend-landing-wrap">
     <div class="ff-card friend-landing-card">
-      <button type="button" class="ff-home" id="friendPlayHome">← হোম</button>
 
       <div class="friend-landing-sky">
         <div class="friend-landing-cloud landing-cloud-a"></div>
@@ -2412,10 +2411,6 @@ if (siteFooter) siteFooter.style.display = "none";
 `;
 
   $("friendPlayTitle").textContent = `তুমি ${quiz.creatorName}-কে কতটা চেনো?`;
-  $("friendPlayHome").onclick = () => {
-    if (siteFooter) siteFooter.style.display = "";
-    show("home");
-  };
 
   const content = $("friendPlayContent");
   const resultBox = $("friendPlayResult");
