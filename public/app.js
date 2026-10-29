@@ -78,11 +78,31 @@ function fail(error) {
   return error?.message || "কাজটি করা যায়নি। আবার চেষ্টা করুন।";
 }
 
+function updateLanguageVisibility() {
+  const control = $("languageControl");
+  if (!control) return;
+
+  const homeVisible =
+    $("home") && !$("home").classList.contains("hidden");
+
+  const friendView = $("friendPlayView");
+  const friendLandingVisible =
+    friendView &&
+    !friendView.classList.contains("hidden") &&
+    $("friendPlayerName");
+
+  control.classList.toggle(
+    "hidden",
+    !(homeVisible || friendLandingVisible)
+  );
+}
+
 function show(id) {
   document.querySelectorAll(".view").forEach(el => {
     el.classList.toggle("hidden", el.id !== id);
   });
 
+  updateLanguageVisibility();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
