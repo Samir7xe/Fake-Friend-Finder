@@ -1118,6 +1118,31 @@ if (intro) intro.classList.remove("hidden");
     padding: 6px;
   }
 }
+
+/* Allow full-page scrolling while keeping options independently scrollable */
+.ff-wrap:has(.ff-question-board-card),
+.ff-wrap:has(.ff-question-board-card) .ff-card,
+.ff-wrap:has(.ff-question-board-card) .ff-question-board-card {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.ff-wrap .ff-question-board-card #ffQuestionArea,
+.ff-wrap .ff-question-board-card .ff-question-layout {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.ff-wrap .ff-question-board-card .ff-options-scroll {
+  flex: 0 1 auto;
+  max-height: 40dvh;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+  touch-action: pan-y;
+}
+
       </style>
       <div class="ff-wrap">
   <div class="ff-card">
