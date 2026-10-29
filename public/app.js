@@ -929,7 +929,8 @@ if (intro) intro.classList.remove("hidden");
 .ff-wrap:has(.ff-question-board-card) {
   width: 100%;
   max-width: 680px;
-  height: 100dvh;
+  height: auto;
+  max-height: calc(100dvh - 16px);
   margin: 0 auto;
   padding: 0;
   box-sizing: border-box;
@@ -985,7 +986,7 @@ if (intro) intro.classList.remove("hidden");
 }
 
 .ff-question-layout {
-  height: 100%;
+  height: auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
