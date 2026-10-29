@@ -1011,16 +1011,19 @@ if (intro) intro.classList.remove("hidden");
 }
 
 .ff-board-question {
-  inset: 4%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
+  position: absolute;
+  z-index: 2;
+  inset: 25% 9% 17% 12%;
+  display: grid;
+  place-items: center;
+  text-align: center;
   overflow: hidden;
   overflow-wrap: anywhere;
   word-break: normal;
-  line-height: 1.15;
-  text-align: center;
+  line-height: 1.22;
+  font-weight: 800;
+  color: #51483f;
+  padding: 2px;
   box-sizing: border-box;
 }
 
