@@ -663,6 +663,268 @@ if (intro) intro.classList.remove("hidden");
   .ff-sky { height: 190px; }
   .ff-character { font-size: 92px; }
 }
+
+/* Question board — design only */
+.ff-wrap:has(#ffQuestionArea) {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.ff-wrap:has(#ffQuestionArea) .ff-card {
+  height: calc(100dvh - 16px);
+  min-height: 0;
+  max-height: calc(100dvh - 16px);
+  padding: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #eaf7ff, #fff3f8);
+}
+
+.ff-wrap:has(#ffQuestionArea) .ff-title {
+  flex: 0 0 auto;
+  margin: 2px 0 8px;
+  font-size: clamp(16px, 4vw, 22px);
+}
+
+.ff-wrap:has(#ffQuestionArea) #ffQuestionArea {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ff-question-layout {
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.ff-question-status {
+  flex: 0 0 auto;
+  text-align: center;
+  color: #4b6680;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ff-board-stage {
+  position: relative;
+  flex: 0 0 auto;
+  width: calc(100% - 14px);
+  margin: 0 auto 4px;
+  aspect-ratio: 16 / 9;
+  overflow: visible;
+}
+
+.ff-paper-board {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 9% 8% 7% 13%;
+  color: #51483f;
+  background:
+    radial-gradient(ellipse at 25% 30%, #ffffffb8 0 3%, transparent 27%),
+    radial-gradient(ellipse at 80% 70%, #dbeeff80 0 3%, transparent 35%),
+    #fffaf0;
+  border: 1px solid #d5c5aa;
+  filter: drop-shadow(0 4px 4px #617a9630);
+  clip-path: polygon(
+    2% 2%, 12% 3%, 21% 1%, 32% 3%, 43% 1%,
+    55% 3%, 67% 1%, 79% 3%, 90% 1%, 98% 3%,
+    97% 18%, 99% 31%, 97% 46%, 99% 60%,
+    97% 74%, 99% 87%, 96% 98%, 83% 96%,
+    71% 99%, 58% 97%, 44% 99%, 31% 97%,
+    18% 99%, 3% 96%, 2% 82%, 4% 68%,
+    2% 52%, 4% 37%, 2% 20%
+  );
+}
+
+.ff-paper-board::before {
+  content: "✦     ✧       ✦       ☁";
+  position: absolute;
+  inset: 15% 8% auto;
+  color: #a9c9e6;
+  font-size: clamp(10px, 2.5vw, 18px);
+  letter-spacing: 7px;
+  opacity: .65;
+  pointer-events: none;
+}
+
+.ff-paper-board::after {
+  content: "☁      ✧       ✦";
+  position: absolute;
+  right: 8%;
+  bottom: 12%;
+  color: #b9cce5;
+  font-size: clamp(10px, 2.5vw, 17px);
+  opacity: .7;
+  pointer-events: none;
+}
+
+.ff-paper-holes {
+  position: absolute;
+  z-index: 3;
+  top: 8%;
+  bottom: 8%;
+  left: 2%;
+  width: 7%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  pointer-events: none;
+}
+
+.ff-paper-holes span {
+  width: clamp(5px, 1.5vw, 10px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #d4e5ed;
+  border: 1px solid #c1b69f;
+  box-shadow: inset 0 1px 2px #7b8a9740;
+}
+
+.ff-question-leaf {
+  position: absolute;
+  z-index: 4;
+  top: -4%;
+  left: 50%;
+  transform: translateX(-50%) rotate(-3deg);
+  width: 17%;
+  height: 22%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 900;
+  font-size: clamp(11px, 3vw, 19px);
+  background: #78a96b;
+  border: 1px solid #5d8b51;
+  border-radius: 4% 65% 4% 65%;
+  box-shadow: 0 2px 4px #526d4730;
+}
+
+.ff-board-question {
+  position: absolute;
+  z-index: 2;
+  inset: 25% 9% 17% 12%;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.22;
+  font-weight: 800;
+  color: #51483f;
+  padding: 2px;
+  box-sizing: border-box;
+}
+
+.ff-board-pen {
+  position: absolute;
+  z-index: 5;
+  width: 5px;
+  height: 37%;
+  right: -1%;
+  top: 39%;
+  border-radius: 5px;
+  transform: rotate(28deg);
+  transform-origin: center;
+  background: linear-gradient(
+    90deg, #c58d53 0 20%, #f3d7a6 20% 65%,
+    #8a5c36 65% 82%, #493b36 82%
+  );
+  box-shadow: 1px 2px 3px #443b3440;
+  pointer-events: none;
+}
+
+.ff-board-pen::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 0;
+  border-left: 2.5px solid transparent;
+  border-right: 2.5px solid transparent;
+  border-bottom: 9px solid #6e6258;
+}
+
+.ff-options-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  touch-action: pan-y;
+}
+
+.ff-options-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.ff-options-scroll .ff-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 2px 2px 8px;
+}
+
+.ff-options-scroll .ff-option {
+  min-width: 0;
+  min-height: 40px;
+  padding: 9px 6px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.ff-question-layout .ff-actions {
+  flex: 0 0 auto;
+  margin-top: 0;
+  gap: 8px;
+}
+
+.ff-question-layout .ff-btn {
+  padding: 10px 8px;
+  font-size: 14px;
+}
+
+@media (max-height: 650px) {
+  .ff-wrap:has(#ffQuestionArea) .ff-card {
+    padding: 6px;
+  }
+
+  .ff-question-layout {
+    gap: 5px;
+  }
+
+  .ff-board-question {
+    line-height: 1.12;
+  }
+
+  .ff-options-scroll .ff-option {
+    min-height: 34px;
+    padding: 6px 4px;
+    font-size: 12px;
+  }
+
+  .ff-question-layout .ff-btn {
+    padding: 7px;
+  }
+}
       </style>
       <div class="ff-wrap">
   <div class="ff-card">
@@ -833,29 +1095,55 @@ area = $("ffQuestionArea");
           answer => typeof answer === "string" && answer.trim() !== ""
         ).length;
         
+        const questionFontSize = Math.max(
+          12,
+          Math.min(
+            27,
+            Math.floor(27 - Math.max(0, q.question.length - 35) * 0.22)
+          )
+        );
+
         area.innerHTML = `
-          <div style="margin-top:28px">
-            <div class="ff-progress">
-              <div style="width:${(selectedCount / count) * 100}%"></div>
+          <div class="ff-question-layout">
+            <div class="ff-question-status">
+              <div>প্রশ্ন ${current + 1} / ${questions.length}</div>
+              <div>নির্বাচিত ${selectedCount} / ${count}</div>
+              <div class="ff-progress">
+                <div style="width:${(selectedCount / count) * 100}%"></div>
+              </div>
             </div>
 
-            <p style="text-align:center;color:#d9c4f4">
-  বর্তমান প্রশ্ন: ${current + 1}
-</p>
+            <div class="ff-board-stage">
+              <div class="ff-paper-board">
+                <div class="ff-board-question"
+                     style="font-size:${questionFontSize}px">
+                  ${esc(q.question)}
+                </div>
+              </div>
 
-            <p style="text-align:center;color:#d9c4f4">
-              প্রশ্ন সিলেক্ট করেছেন: ${selectedCount} / ${count}
-            </p>
+              <div class="ff-paper-holes" aria-hidden="true">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+                <span></span>
+              </div>
 
-            <div class="ff-question">${esc(q.question)}</div>
+              <div class="ff-question-leaf">
+                ${String(current + 1).padStart(2, "0")}
+              </div>
 
-            <div class="ff-options">
-              ${options.map((option, i) => `
-                <button type="button" class="ff-option ${answers[String(q.id)] === option ? "selected" : ""}"
-                  data-ff-answer="${i}">
-                  ${esc(option)}
-                </button>
-              `).join("")}
+              <div class="ff-board-pen" aria-hidden="true"></div>
+            </div>
+
+            <div class="ff-options-scroll">
+              <div class="ff-options">
+                ${options.map((option, i) => `
+                  <button type="button"
+                    class="ff-option ${answers[String(q.id)] === option ? "selected" : ""}"
+                    data-ff-answer="${i}">
+                    ${esc(option)}
+                  </button>
+                `).join("")}
+              </div>
             </div>
 
             <div class="ff-actions">
@@ -871,11 +1159,6 @@ area = $("ffQuestionArea");
             </div>
           </div>
         `;
-
-        area.querySelectorAll("[data-ff-answer]").forEach(button => {
-          button.addEventListener("click", async () => {
-            answers[String(q.id)] =
-              options[Number(button.dataset.ffAnswer)];
 
             await advance();
           });
