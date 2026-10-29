@@ -1648,6 +1648,8 @@ async function loadFriendQuiz(id) {
           <div class="friend-nav">
             <button type="button" id="friendBackButton" class="back" ${history.length ? "" : "disabled"}>Back</button>
           </div>`;
+        
+           updateLanguageVisibility();
 
         content.querySelectorAll("[data-answer-index]").forEach(button => {
   button.onclick = async () => {
