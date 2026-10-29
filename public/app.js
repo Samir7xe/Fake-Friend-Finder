@@ -2582,30 +2582,36 @@ if (siteFooter) siteFooter.style.display = "none";
     gap: 8px;
   }
 
-  .ff-board-stage {
-    position: relative;
-    width: calc(100% - 14px);
-    margin: 0 auto 8px;
-    aspect-ratio: 16 / 9;
-  }
-
-  .ff-paper-board {
-    position: absolute;
-    inset: 0;
-    box-sizing: border-box;
-    padding: 9% 8% 7% 13%;
-    background: #fffaf0;
-    border: 1px solid #d5c5aa;
-    clip-path: polygon(
-      2% 2%, 12% 3%, 21% 1%, 32% 3%, 43% 1%,
-      55% 3%, 67% 1%, 79% 3%, 90% 1%, 98% 3%,
-      97% 18%, 99% 31%, 97% 46%, 99% 60%,
-      97% 74%, 99% 87%, 96% 98%, 83% 96%,
-      71% 99%, 58% 97%, 44% 99%, 31% 97%,
-      18% 99%, 3% 96%, 2% 82%, 4% 68%,
-      2% 52%, 4% 37%, 2% 20%
+.ff-board-stage {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  margin: 8px auto 12px;
+  aspect-ratio: 16 / 9;
+  overflow: visible;
+}
+  
+.ff-paper-board {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 12% 8% 8% 15%;
+  color: #3d526e;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      #fffef8 0px,
+      #fffef8 29px,
+      #b9d9f5 30px,
+      #b9d9f5 31px
     );
-  }
+  border: 1px solid #d5c5aa;
+  box-shadow: 0 6px 14px #617a9630;
+  clip-path: polygon(
+    1% 1%, 98% 1%, 99% 98%, 2% 99%
+  );
+}
 
   .ff-board-question {
     position: absolute;
@@ -2721,7 +2727,8 @@ if (siteFooter) siteFooter.style.display = "none";
 
         <div style="text-align:center;margin-top:8px">
           <button type="button" id="friendBackButton" class="back"
-            ${history.length ? "" : "disabled"}>Back</button>
+  style="min-height:58px; padding:16px 30px; font-size:18px;"
+  ${history.length ? "" : "disabled"}>Back</button>
           <p class="friendship-footer">Made with ✦ for real friendships</p>
         </div>
       </div>
