@@ -1143,6 +1143,33 @@ if (intro) intro.classList.remove("hidden");
   touch-action: pan-y;
 }
 
+.friend-landing-wrap {
+  max-width: 520px;
+  margin: 22px auto;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+.friend-landing-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.friend-landing-card #friendPlayContent {
+  position: relative;
+}
+
+.friend-landing-card .friendship-footer {
+  text-align: center;
+  width: 100%;
+}
+
+.friend-landing-card #friendPlayerName {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
+
 .friendship-footer {
   text-align: center;
   font-size: 13px;
@@ -2139,11 +2166,22 @@ if (siteFooter) siteFooter.style.display = "none";
   }
 
   view.innerHTML = `
-    <h2 id="friendPlayTitle"></h2>
-    <div id="friendPlayContent"></div>
-    <p id="friendPlayResult"></p>
-    <button type="button" id="friendPlayHome">হোমে ফিরুন</button>
-  `;
+  <div class="ff-wrap friend-landing-wrap">
+    <div class="ff-card friend-landing-card">
+      <button type="button" class="ff-home" id="friendPlayHome">← হোম</button>
+
+      <div class="ff-sky">
+        <div class="ff-cloud ff-cloud-one"></div>
+        <div class="ff-cloud ff-cloud-two"></div>
+        <div class="ff-character" aria-label="ভাসমান কার্টুন চরিত্র">🐻</div>
+      </div>
+
+      <div class="ff-speech" id="friendPlayTitle"></div>
+      <div id="friendPlayContent"></div>
+      <p id="friendPlayResult"></p>
+    </div>
+  </div>
+`;
 
   $("friendPlayTitle").textContent = `তুমি ${quiz.creatorName}-কে কতটা চেনো?`;
   $("friendPlayHome").onclick = () => {
@@ -2155,16 +2193,24 @@ if (siteFooter) siteFooter.style.display = "none";
   const resultBox = $("friendPlayResult");
 
     content.innerHTML = `
-    <label>তোমার নাম
-      <input id="friendPlayerName" maxlength="50" placeholder="নিজের নাম লেখো">
+  <div id="ffSetupStep">
+    <label class="ff-label" for="friendPlayerName">
+      নিজের নাম লেখো ☺️
     </label>
-    <button type="button" id="friendStartButton">কুইজ শুরু করো</button>
-    <p class="friendship-footer">Made with ✦ for real friendships</p>
-    <section class="question-card" id="friendLandingScoreboard">
-      <h3>🏆 এই কুইজের স্কোরবোর্ড</h3>
-      <p>স্কোর লোড হচ্ছে...</p>
-    </section>
-  `;
+    <input class="ff-input" id="friendPlayerName"
+      maxlength="50" placeholder="এখানে নাম লেখো">
+  </div>
+
+  <button type="button" class="ff-start" id="friendStartButton"
+    style="margin-top:22px">কুইজ শুরু করো</button>
+
+  <p class="friendship-footer">Made with ✦ for real friendships</p>
+
+  <section class="question-card" id="friendLandingScoreboard">
+    <h3>🏆 এই কুইজের স্কোরবোর্ড</h3>
+    <p>স্কোর লোড হচ্ছে...</p>
+  </section>
+`;
 
   show("friendPlayView");
 
@@ -2293,46 +2339,48 @@ if (siteFooter) siteFooter.style.display = "none";
       function renderQuestion() {
         const q = questions[currentIndex];
         content.innerHTML = `
-  <p class="muted">প্রশ্ন ${Object.keys(answers).filter(k => answers[k] !== "").length + 1} / ${questions.length}</p>
+  <div class="ff-wrap">
+    <div class="ff-card ff-question-board-card">
+      <div class="ff-question-layout">
+        <p class="muted" style="text-align:center">
+          প্রশ্ন ${Object.keys(answers).filter(k => answers[k] !== "").length + 1} / ${questions.length}
+        </p>
 
-  <div class="ff-board-stage">
-    <div class="ff-paper-board">
-      <div class="ff-board-question">
-        ${esc(q.prompt)}
+        <div class="ff-board-stage">
+          <div class="ff-paper-board">
+            <div class="ff-board-question">
+              ${esc(q.prompt)}
+            </div>
+          </div>
+          <div class="ff-paper-holes" aria-hidden="true">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="ff-question-leaf">
+            ${String(currentIndex + 1).padStart(2, "0")}
+          </div>
+          <div class="ff-board-pen" aria-hidden="true"></div>
+        </div>
+
+        <div class="ff-options-scroll">
+          <div class="ff-options">
+            ${q.options.map((option, i) => `
+              <button type="button"
+                class="ff-option answer-choice ${answers[q.id] === option ? "selected" : ""}"
+                data-answer-index="${i}">
+                ${esc(option)}
+              </button>
+            `).join("")}
+          </div>
+        </div>
+
+        <div style="text-align:center;margin-top:8px">
+          <button type="button" id="friendBackButton" class="back"
+            ${history.length ? "" : "disabled"}>Back</button>
+          <p class="friendship-footer">Made with ✦ for real friendships</p>
+        </div>
       </div>
     </div>
-
-    <div class="ff-paper-holes" aria-hidden="true">
-      <span></span><span></span><span></span>
-      <span></span><span></span><span></span>
-      <span></span>
-    </div>
-
-    <div class="ff-question-leaf">
-      ${String(currentIndex + 1).padStart(2, "0")}
-    </div>
-
-    <div class="ff-board-pen" aria-hidden="true"></div>
-  </div>
-
-  <div class="ff-options-scroll">
-    <div class="ff-options">
-      ${q.options.map((option, i) => `
-        <button type="button"
-          class="ff-option answer-choice ${answers[q.id] === option ? "selected" : ""}"
-          data-answer-index="${i}">
-          ${esc(option)}
-        </button>
-      `).join("")}
-    </div>
-  </div>
-
-  <div class="ff-actions">
-    <button type="button" id="friendBackButton"
-      class="ff-btn ff-back" ${history.length ? "" : "disabled"}>
-      ← Back
-    </button>
-    <p class="friendship-footer">Made with ✦ for real friendships</p>
   </div>
 `;
         
