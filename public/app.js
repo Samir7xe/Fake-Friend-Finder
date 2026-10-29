@@ -1029,14 +1029,14 @@ if (intro) intro.classList.remove("hidden");
   box-sizing: border-box;
 }
 
-/* Options scroll when needed; page can scroll too */
+/* Options scroll first; page scrolls after options reach the end */
 .ff-options-scroll {
   flex: 0 1 auto;
   min-height: 0;
   max-height: 40dvh;
   overflow-x: hidden;
   overflow-y: auto;
-  overscroll-behavior-y: auto;
+  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #8a9ca8 transparent;
