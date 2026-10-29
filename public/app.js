@@ -1143,7 +1143,14 @@ if (intro) intro.classList.remove("hidden");
   touch-action: pan-y;
 }
 
-      </style>
+.friendship-footer {
+  text-align: center;
+  font-size: 13px;
+  color: #7185c5;
+  margin: 10px 0;
+  padding: 4px;
+}
+        </style>
       <div class="ff-wrap">
   <div class="ff-card">
 
@@ -2113,6 +2120,8 @@ $("musicToggle")?.addEventListener("click", async () => {
 
 async function loadFriendQuiz(id) {
   let quiz;
+  const siteFooter = document.getElementById("siteFooter");
+if (siteFooter) siteFooter.style.display = "none";
   try {
   quiz = await api(`/api/friend-quizzes/${encodeURIComponent(id)}`);
   } catch (error) {
@@ -2137,7 +2146,10 @@ async function loadFriendQuiz(id) {
   `;
 
   $("friendPlayTitle").textContent = `তুমি ${quiz.creatorName}-কে কতটা চেনো?`;
-  $("friendPlayHome").onclick = () => show("home");
+  $("friendPlayHome").onclick = () => {
+  if (siteFooter) siteFooter.style.display = "";
+  show("home");
+};
 
   const content = $("friendPlayContent");
   const resultBox = $("friendPlayResult");
@@ -2147,6 +2159,7 @@ async function loadFriendQuiz(id) {
       <input id="friendPlayerName" maxlength="50" placeholder="নিজের নাম লেখো">
     </label>
     <button type="button" id="friendStartButton">কুইজ শুরু করো</button>
+    <p class="friendship-footer">Made with ✦ for real friendships</p>
     <section class="question-card" id="friendLandingScoreboard">
       <h3>🏆 এই কুইজের স্কোরবোর্ড</h3>
       <p>স্কোর লোড হচ্ছে...</p>
@@ -2222,6 +2235,7 @@ async function loadFriendQuiz(id) {
               style="display:block;width:100%;min-height:64px;margin:0 0 20px;padding:16px;font-size:22px;font-weight:800;border-radius:14px;">
               এবার তোমার কুইজ তৈরি করো🐶
             </button>
+            <p class="friendship-footer">Made with ✦ for real friendships</p>
             <div class="question-card">
               <h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3>
               <h2>আমার স্কোর: ${score.score}/${score.total}</h2>
@@ -2288,6 +2302,7 @@ async function loadFriendQuiz(id) {
           </div>
           <div class="friend-nav">
             <button type="button" id="friendBackButton" class="back" ${history.length ? "" : "disabled"}>Back</button>
+            <p class="friendship-footer">Made with ✦ for real friendships</p>
           </div>`;
         
            updateLanguageVisibility();
