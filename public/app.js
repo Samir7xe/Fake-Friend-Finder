@@ -930,7 +930,7 @@ if (intro) intro.classList.remove("hidden");
   width: 100%;
   max-width: 680px;
   height: auto;
-  max-height: calc(100dvh - 16px);
+  max-height: none;
   margin: 0 auto;
   padding: 0;
   box-sizing: border-box;
@@ -942,7 +942,7 @@ if (intro) intro.classList.remove("hidden");
   width: 100%;
   height: auto;
   min-height: 0;
-  max-height: calc(100dvh - 16px);
+  max-height: none;
   margin: 0;
   padding: 8px;
   overflow: hidden;
@@ -979,10 +979,10 @@ if (intro) intro.classList.remove("hidden");
 }
 
 .ff-wrap .ff-question-board-card #ffQuestionArea {
-  flex: 0 1 auto;
-  max-height: calc(100dvh - 170px);
+  flex: 0 0 auto;
+  max-height: none;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .ff-question-layout {
