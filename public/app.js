@@ -707,16 +707,16 @@ if (intro) intro.classList.remove("hidden");
       const speech = $("ffSpeech");
 
       if (setupStep === 0) {
-        speech.textContent = "তোমার নাম কী?";
+        speech.textContent = "তোমার নাম কী..?";
         stepArea.innerHTML = `
           <label class="ff-label" for="friendCreatorName">
-            তোমার নাম লেখো
+            তোমার নাম লেখো ☺️
           </label>
           <input class="ff-input" id="friendCreatorName"
             maxlength="50" placeholder="এখানে নাম লেখো">
         `;
       } else if (setupStep === 1) {
-        speech.textContent = "তোমার Gender কী?";
+        speech.textContent = "তোমার Gender কী..?";
         stepArea.innerHTML = `
           <div class="ff-choice-row">
             <button type="button" class="ff-choice"
@@ -735,7 +735,7 @@ if (intro) intro.classList.remove("hidden");
           });
         });
       } else {
-        speech.textContent = "কয়টি প্রশ্নের উত্তর দেবে?";
+        speech.textContent = "কয়টি প্রশ্ন তৈরি করবে..?";
         stepArea.innerHTML = `
           <div class="ff-choice-row">
             <button type="button" class="ff-choice"
