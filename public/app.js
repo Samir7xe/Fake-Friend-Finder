@@ -2562,6 +2562,128 @@ if (siteFooter) siteFooter.style.display = "none";
       function renderQuestion() {
         const q = questions[currentIndex];
         content.innerHTML = `
+        
+<style>
+  .ff-question-board-card {
+    width: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid white;
+    border-radius: 24px;
+    color: #34345c;
+    background: linear-gradient(180deg, #eaf7ff, #fff3f8);
+    box-shadow: 0 12px 30px #719bd633;
+  }
+
+  .ff-question-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ff-board-stage {
+    position: relative;
+    width: calc(100% - 14px);
+    margin: 0 auto 8px;
+    aspect-ratio: 16 / 9;
+  }
+
+  .ff-paper-board {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    padding: 9% 8% 7% 13%;
+    background: #fffaf0;
+    border: 1px solid #d5c5aa;
+    clip-path: polygon(
+      2% 2%, 12% 3%, 21% 1%, 32% 3%, 43% 1%,
+      55% 3%, 67% 1%, 79% 3%, 90% 1%, 98% 3%,
+      97% 18%, 99% 31%, 97% 46%, 99% 60%,
+      97% 74%, 99% 87%, 96% 98%, 83% 96%,
+      71% 99%, 58% 97%, 44% 99%, 31% 97%,
+      18% 99%, 3% 96%, 2% 82%, 4% 68%,
+      2% 52%, 4% 37%, 2% 20%
+    );
+  }
+
+  .ff-board-question {
+    position: absolute;
+    inset: 20% 8% 12% 12%;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+    font-weight: 800;
+    font-size: clamp(16px, 4vw, 25px);
+  }
+
+  .ff-paper-holes {
+    position: absolute;
+    z-index: 3;
+    top: 8%;
+    bottom: 8%;
+    left: 2%;
+    width: 7%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    pointer-events: none;
+  }
+
+  .ff-paper-holes span {
+    width: 8px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #d4e5ed;
+    border: 1px solid #c1b69f;
+  }
+
+  .ff-question-leaf {
+    position: absolute;
+    z-index: 4;
+    top: -4%;
+    left: 50%;
+    transform: translateX(-50%) rotate(-3deg);
+    padding: 6px 12px;
+    color: white;
+    background: #78a96b;
+    border-radius: 4px 14px;
+    font-weight: 900;
+  }
+
+  .ff-options-scroll {
+    max-height: 40dvh;
+    overflow-y: auto;
+  }
+
+  .ff-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .ff-options .ff-option {
+    min-width: 0;
+    min-height: 40px;
+    padding: 9px 6px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .ff-question-layout .friendship-footer {
+    margin: 10px auto 0;
+    text-align: center;
+    color: #77728b;
+    opacity: .58;
+    font-size: 13px;
+  }
+</style>
+
   <div class="ff-wrap">
     <div class="ff-card ff-question-board-card">
       <div class="ff-question-layout">
