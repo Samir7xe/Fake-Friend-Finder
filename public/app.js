@@ -516,17 +516,19 @@ if (intro) intro.classList.remove("hidden");
 }
 
 .ff-choice {
-  background: #211b36 !important;
-  color: #e8d8ff !important;
-  border: 2px solid #a66cff !important;
-  transition: background 0.2s, color 0.2s;
+  background: #ffffffed !important;
+  color: #34345c !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 16px !important;
+  transition: background .2s, color .2s, transform .2s;
 }
 
 .ff-choice.selected {
-  background: #00c853 !important;
-  color: #ffffff !important;
+  background: #f5b5d2 !important;
+  color: #57344b !important;
   border: 2px solid #ffffff !important;
-  box-shadow: 0 0 12px #00c853 !important;
+  box-shadow: 0 0 12px #f5b5d2 !important;
+  transform: scale(1.03);
 }
         .ff-start,.ff-share{
           width:100%;padding:15px;border:0;border-radius:14px;
@@ -543,7 +545,7 @@ if (intro) intro.classList.remove("hidden");
 .ff-card {
   position: relative;
   overflow: hidden;
-  min-height: 78vh;
+  min-height: auto;
   padding: 12px 16px 20px;
   border: 1px solid #ffffff;
   border-radius: 28px;
@@ -566,7 +568,7 @@ if (intro) intro.classList.remove("hidden");
 
 .ff-sky {
   position: relative;
-  height: 245px;
+  height: 150px;
   display: grid;
   place-items: center;
   overflow: hidden;
