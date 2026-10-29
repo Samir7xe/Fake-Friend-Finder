@@ -991,7 +991,7 @@ if (intro) intro.classList.remove("hidden");
   display: flex;
   flex-direction: column;
   gap: 6px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .ff-question-status {
@@ -1029,14 +1029,14 @@ if (intro) intro.classList.remove("hidden");
   box-sizing: border-box;
 }
 
-/* Only the options area scrolls */
+/* Options scroll when needed; page can scroll too */
 .ff-options-scroll {
-  flex: 0 1 40dvh;
+  flex: 0 1 auto;
   min-height: 0;
   max-height: 40dvh;
   overflow-x: hidden;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #8a9ca8 transparent;
