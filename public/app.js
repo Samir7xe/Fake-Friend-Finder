@@ -1034,7 +1034,7 @@ if (intro) intro.classList.remove("hidden");
   align-items: center;
   justify-content: center;
   padding: 4px;
-  overflow: auto;
+  overflow: hidden;
   overflow-wrap: anywhere;
   word-break: normal;
   line-height: 1.15;
