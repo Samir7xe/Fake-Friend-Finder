@@ -533,11 +533,139 @@ if (intro) intro.classList.remove("hidden");
           background:linear-gradient(90deg,#913bdb,#e044b6);
           color:white;font-size:17px;font-weight:800;cursor:pointer
         }
+        
+.ff-wrap {
+  max-width: 480px;
+  margin: 8px auto;
+  padding: 8px;
+}
+
+.ff-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 78vh;
+  padding: 12px 16px 20px;
+  border: 1px solid #ffffff;
+  border-radius: 28px;
+  color: #34345c;
+  background: linear-gradient(180deg, #83d9ff, #d9f3ff 55%, #fff0f8);
+  box-shadow: 0 12px 30px #719bd633;
+}
+
+.ff-home {
+  display: block;
+  width: fit-content;
+  padding: 8px 16px;
+  margin: 0 0 4px;
+  border: 2px solid white;
+  border-radius: 14px;
+  background: #ffffffdd;
+  color: #34345c;
+  font-weight: 800;
+}
+
+.ff-sky {
+  position: relative;
+  height: 245px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.ff-cloud {
+  position: absolute;
+  width: 115px;
+  height: 35px;
+  border-radius: 40px;
+  background: #ffffffcc;
+  animation: ffCloudFloat 5s ease-in-out infinite alternate;
+}
+
+.ff-cloud:before,
+.ff-cloud:after {
+  content: "";
+  position: absolute;
+  bottom: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: inherit;
+}
+
+.ff-cloud:before { left: 15px; }
+.ff-cloud:after { right: 12px; width: 38px; height: 38px; }
+
+.ff-cloud-one { left: 2px; top: 48px; }
+.ff-cloud-two { right: 0; top: 115px; animation-delay: -2s; }
+
+.ff-character {
+  position: relative;
+  z-index: 2;
+  font-size: 112px;
+  line-height: 1;
+  transform-origin: center;
+  animation: ffCharacterFloat 2.6s ease-in-out infinite;
+  filter: drop-shadow(0 12px 8px #536aa533);
+}
+
+.ff-speech {
+  position: relative;
+  width: fit-content;
+  max-width: 95%;
+  margin: 0 auto 12px;
+  padding: 12px 18px;
+  border: 3px solid white;
+  border-radius: 22px;
+  background: #ffffffed;
+  color: #34345c;
+  text-align: center;
+  font-size: 21px;
+  font-weight: 900;
+  box-shadow: 0 5px 0 #b6dfff;
+  animation: ffDialogueIn .6s ease both;
+}
+
+.ff-label {
+  color: #34345c;
+  font-size: 15px;
+}
+
+.ff-input {
+  background: #ffffffed;
+  color: #34345c;
+  border: 2px solid white;
+}
+
+@keyframes ffCharacterFloat {
+  0%, 100% { transform: translateY(4px) rotate(-2deg); }
+  50% { transform: translateY(-12px) rotate(2deg); }
+}
+
+@keyframes ffCloudFloat {
+  from { transform: translateX(-5px); }
+  to { transform: translateX(12px); }
+}
+
+@keyframes ffDialogueIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-height: 750px) {
+  .ff-card { min-height: auto; }
+  .ff-sky { height: 190px; }
+  .ff-character { font-size: 92px; }
+}
       </style>
 
-          <div class="ff-wrap">
-        <div class="ff-card">
-          <div class="ff-mascot" aria-hidden="true">
+          
+<button type="button" class="ff-home" id="ffHome">← হোম</button>
+
+<div class="ff-sky">
+  <div class="ff-cloud ff-cloud-one"></div>
+  <div class="ff-cloud ff-cloud-two"></div>
+  <div class="ff-character" aria-label="ভাসমান কার্টুন চরিত্র">🐻</div>
+</div>
             <svg viewBox="0 0 180 145" width="150" role="img">
               <circle cx="48" cy="35" r="24" fill="#b8b8c2"/>
               <circle cx="132" cy="35" r="24" fill="#b8b8c2"/>
@@ -571,7 +699,10 @@ if (intro) intro.classList.remove("hidden");
         </div>
       </div>
       `;
-    
+
+    $("ffHome").addEventListener("click", () => {
+  show("home");
+});
     const startButton = $("ffStart");
     let area = $("ffQuestionArea");
     let selectedGender = "";
