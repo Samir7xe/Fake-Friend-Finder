@@ -1160,6 +1160,11 @@ area = $("ffQuestionArea");
           </div>
         `;
 
+        area.querySelectorAll("[data-ff-answer]").forEach(button => {
+          button.addEventListener("click", async () => {
+            answers[String(q.id)] =
+              options[Number(button.dataset.ffAnswer)];
+
             await advance();
           });
         });
