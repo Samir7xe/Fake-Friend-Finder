@@ -762,6 +762,7 @@ if (intro) intro.classList.remove("hidden");
     renderSetupStep();
 
     startButton.addEventListener("click", () => {
+      alert("বাটনে ক্লিক ধরা পড়েছে!");
       if (setupStep === 0) {
         name = $("friendCreatorName").value.trim();
 
