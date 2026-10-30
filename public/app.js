@@ -2462,13 +2462,15 @@ if (siteFooter) siteFooter.style.display = "none";
 
   loadLandingScoreboard();
 
-  $("friendStartButton").onclick = async () => {
+    $("friendStartButton").onclick = async () => {
     const playerName = $("friendPlayerName").value.trim();
     if (!playerName) return alert("আগে নিজের নাম লেখো।");
 
+    const landingAnimation = view.querySelector(".friend-landing-sky");
+    if (landingAnimation) landingAnimation.style.display = "none";
+
     const startButton = $("friendStartButton");
     startButton.disabled = true;
-
     try {
       const game = await api(
         `/api/friend-quizzes/${encodeURIComponent(id)}/start`,
@@ -2559,8 +2561,9 @@ if (siteFooter) siteFooter.style.display = "none";
   return -1;
       }
 
-      function renderQuestion() {
+            function renderQuestion() {
         const q = questions[currentIndex];
+        const questionFontSize = Math.max(15, Math.min(34, Math.floor(520 / Math.max(1, q.prompt.length) * 1.25)));
         content.innerHTML = `
         
 <style>
@@ -2598,31 +2601,40 @@ if (siteFooter) siteFooter.style.display = "none";
   box-sizing: border-box;
   padding: 12% 8% 8% 15%;
   color: #3d526e;
-  background:
+    background:
     repeating-linear-gradient(
       to bottom,
       #fffef8 0px,
-      #fffef8 29px,
-      #b9d9f5 30px,
-      #b9d9f5 31px
+      #fffef8 22px,
+      #b9d9f5 23px,
+      #b9d9f5 24px
     );
   border: 1px solid #d5c5aa;
   box-shadow: 0 6px 14px #617a9630;
-  clip-path: polygon(
-    1% 1%, 98% 1%, 99% 98%, 2% 99%
+    clip-path: polygon(
+    1% 1%, 98% 1%, 99% 94%,
+    95% 96%, 91% 94%, 87% 97%, 83% 95%,
+    79% 97%, 75% 94%, 71% 97%, 67% 95%,
+    63% 98%, 59% 95%, 55% 97%, 51% 94%,
+    47% 97%, 43% 95%, 39% 98%, 35% 95%,
+    31% 97%, 27% 94%, 23% 97%, 19% 95%,
+    15% 98%, 11% 95%, 7% 97%, 2% 95%
   );
 }
 
   .ff-board-question {
     position: absolute;
-    inset: 20% 8% 12% 12%;
+    inset: 12% 8% 12% 12%;
     display: grid;
     place-items: center;
     text-align: center;
+    overflow: hidden;
     overflow-wrap: anywhere;
-    line-height: 1.25;
+    line-height: 1.2;
     font-weight: 800;
-    font-size: clamp(16px, 4vw, 25px);
+    font-size: var(--question-font-size, 22px);
+    padding: 4px;
+    box-sizing: border-box;
   }
 
   .ff-paper-holes {
@@ -2699,7 +2711,7 @@ if (siteFooter) siteFooter.style.display = "none";
 
         <div class="ff-board-stage">
           <div class="ff-paper-board">
-            <div class="ff-board-question">
+             <div class="ff-board-question" style="--question-font-size:${questionFontSize}px">
               ${esc(q.prompt)}
             </div>
           </div>
@@ -2726,7 +2738,9 @@ if (siteFooter) siteFooter.style.display = "none";
         </div>
 
         <div style="text-align:center;margin-top:8px">
-          <button type="button" id="friendBackButton" class="back"
+       <button type="button" id="friendBackButton" class="back"
+  style="display:block;width:100%;min-height:42px;padding:8px 12px;font-size:16px;line-height:1.2;"
+  ${history.length ? "" : "disabled"}>Back</button>
   style="min-height:58px; padding:16px 30px; font-size:18px;"
   ${history.length ? "" : "disabled"}>Back</button>
           <p class="friendship-footer">Made with ✦ for real friendships</p>
