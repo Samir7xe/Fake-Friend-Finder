@@ -2392,9 +2392,9 @@ if (siteFooter) siteFooter.style.display = "none";
       }
     }
   </style>
-
+    `;
   
-  view.innerHTML = `
+  view.innerHTML += `
   <div class="ff-wrap friend-landing-wrap">
     <div class="ff-card friend-landing-card">
       <div id="friendPlayContent"></div>
