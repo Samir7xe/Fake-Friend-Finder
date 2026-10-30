@@ -1663,6 +1663,7 @@ async function advance() {
 
   </div>
 </div>
+`;
           const shareUrl = result.shareUrl;
           const shareTitle = `${name}-এর Friend Quiz`;
           const shareText = "আমার Friend Quiz খেলো!";
