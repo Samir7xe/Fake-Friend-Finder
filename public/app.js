@@ -2670,8 +2670,8 @@ if (siteFooter) siteFooter.style.display = "none";
                 width: 100%;
                 aspect-ratio: 16 / 9;
                 box-sizing: border-box;
-                overflow: hidden;
-                padding: 42px 22px 35px 42px;
+                overflow: visible;
+                padding: 55px 22px 35px 42px;
                 color: #51483f;
                 background:
                   repeating-linear-gradient(
@@ -2751,25 +2751,22 @@ if (siteFooter) siteFooter.style.display = "none";
               }
 
               #friendPlayView .score-cover {
-                position: relative;
-                z-index: 2;
-                width: fit-content;
-                max-width: 100%;
-                margin: 0 auto 30px;
-                padding: 12px 18px;
-                color: #70465e;
-                background: #f4c7d9;
-                font-size: clamp(17px, 5vw, 23px);
-                font-weight: 900;
-                text-align: center;
-                transform: rotate(-2deg);
-                clip-path: polygon(
-                  3% 0%, 96% 3%, 100% 16%,
-                  97% 85%, 94% 100%, 5% 96%,
-                  0% 82%, 3% 15%
-                );
-                filter: drop-shadow(2px 3px 2px #9d789044);
-              }
+  position: absolute;
+  z-index: 5;
+  top: 55px;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-2deg);
+  width: fit-content;
+  max-width: 90%;
+  padding: 10px 18px;
+  color: #70465e;
+  background: #f4c7d9;
+  font-size: clamp(17px, 5vw, 23px);
+  font-weight: 900;
+  text-align: center;
+  white-space: nowrap;
+  clip-path: polygon(3% 0%, 96% 3%, 100% 16%, 97% 85%, 94% 100%, 5% 96%, 0% 82%, 3% 15%);
+}
 
               #friendPlayView .score-number {
                 position: relative;
@@ -2872,7 +2869,8 @@ if (siteFooter) siteFooter.style.display = "none";
               <div class="score-paper-wrap">
                 <div class="score-rope score-rope-left"></div>
                 <div class="score-rope score-rope-right"></div>
-
+                <div class="score-cover">ツতোমার স্কোর彡</div>
+                
                 <div class="score-paper">
                   <div class="score-paper-holes">
                     ${Array.from({ length: 8 }, () => "<span></span>").join("")}
@@ -2883,8 +2881,6 @@ if (siteFooter) siteFooter.style.display = "none";
                     <span class="score-art-two">〰 ✿ 〰</span>
                     <span class="score-art-three">✧ ★</span>
                   </div>
-
-                  <div class="score-cover">ツতোমার স্কোর彡</div>
 
                   ${celebration ? '<div class="score-crown">👑</div>' : ""}
 
