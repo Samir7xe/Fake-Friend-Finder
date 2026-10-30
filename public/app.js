@@ -2393,54 +2393,52 @@ if (siteFooter) siteFooter.style.display = "none";
     }
   </style>
 
+  
+  view.innerHTML = `
   <div class="ff-wrap friend-landing-wrap">
     <div class="ff-card friend-landing-card">
-
-            <div id="friendPlayContent"></div>
-      <p id="friendPlayResult"></p>
-
       <div id="friendPlayContent"></div>
       <p id="friendPlayResult"></p>
     </div>
   </div>
 `;
 
-  $("friendPlayTitle").textContent = `তুমি ${quiz.creatorName}-কে কতটা চেনো?`;
-
   const content = $("friendPlayContent");
   const resultBox = $("friendPlayResult");
 
-      content.innerHTML = `
-  <div class="friend-landing-sky">
-    <div class="friend-landing-cloud landing-cloud-a"></div>
-    <div class="friend-landing-cloud landing-cloud-b"></div>
-    <div class="friend-landing-cloud landing-cloud-c"></div>
-    <div class="friend-landing-bear" aria-label="কার্টুন ভালুক">🐻</div>
-    <div class="friend-landing-speech" id="friendPlayTitle"></div>
-  </div>
+  content.innerHTML = `
+    <div class="friend-landing-sky">
+      <div class="friend-landing-cloud landing-cloud-a"></div>
+      <div class="friend-landing-cloud landing-cloud-b"></div>
+      <div class="friend-landing-cloud landing-cloud-c"></div>
+      <div class="friend-landing-bear" aria-label="কার্টুন ভালুক">🐻</div>
+      <div class="friend-landing-speech" id="friendPlayTitle"></div>
+    </div>
 
-  <div id="ffSetupStep">
-    <label class="ff-label" for="friendPlayerName">
-      নিজের নাম লেখো ☺️
-    </label>
-    <input class="ff-input" id="friendPlayerName"
-      maxlength="50" placeholder="এখানে নাম লেখো">
-  </div>
+    <div id="ffSetupStep">
+      <label class="ff-label" for="friendPlayerName">
+        নিজের নাম লেখো ☺️
+      </label>
+      <input class="ff-input" id="friendPlayerName"
+        maxlength="50" placeholder="এখানে নাম লেখো">
+    </div>
 
-  <button type="button" class="ff-start" id="friendStartButton"
-    style="margin-top:22px">কুইজ শুরু করো</button>
+    <button type="button" class="ff-start" id="friendStartButton"
+      style="margin-top:22px">কুইজ শুরু করো</button>
 
-  <p class="friendship-footer">Made with ✦ for real friendships</p>
+    <p class="friendship-footer">Made with ✦ for real friendships</p>
 
-  <section class="question-card" id="friendLandingScoreboard">
-    <h3>🏆 এই কুইজের স্কোরবোর্ড</h3>
-    <p>স্কোর লোড হচ্ছে...</p>
-  </section>
-`;
+    <section class="question-card" id="friendLandingScoreboard">
+      <h3>🏆 এই কুইজের স্কোরবোর্ড</h3>
+      <p>স্কোর লোড হচ্ছে...</p>
+    </section>
+  `;
 
-  $("friendPlayTitle").textContent = `তুমি ${quiz.creatorName}-কে কতটা চেনো?`;
+  $("friendPlayTitle").textContent =
+    `তুমি ${quiz.creatorName}-কে কতটা চেনো?`;
 
   show("friendPlayView");
+
 
   async function loadLandingScoreboard() {
     const box = $("friendLandingScoreboard");
