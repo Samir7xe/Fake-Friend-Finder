@@ -2629,10 +2629,10 @@ if (siteFooter) siteFooter.style.display = "none";
 
               #friendPlayView .score-rope {
                 position: absolute;
-                z-index: 1;
+                z-index: 3;
                 top: 0;
                 width: 3px;
-                height: 78px;
+                height: 55px;
                 border-radius: 5px;
                 background: repeating-linear-gradient(
                   180deg,
@@ -2645,7 +2645,7 @@ if (siteFooter) siteFooter.style.display = "none";
               #friendPlayView .score-rope::before {
                 content: "";
                 position: absolute;
-                top: 68px;
+                top: 47px;
                 left: -5px;
                 width: 11px;
                 height: 11px;
@@ -2668,7 +2668,7 @@ if (siteFooter) siteFooter.style.display = "none";
                 position: relative;
                 z-index: 2;
                 width: 100%;
-                aspect-ratio: 9 / 16;
+                aspect-ratio: 16 / 9;
                 box-sizing: border-box;
                 overflow: hidden;
                 padding: 42px 22px 35px 42px;
