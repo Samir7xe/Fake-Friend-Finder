@@ -2396,13 +2396,8 @@ if (siteFooter) siteFooter.style.display = "none";
   <div class="ff-wrap friend-landing-wrap">
     <div class="ff-card friend-landing-card">
 
-      <div class="friend-landing-sky">
-        <div class="friend-landing-cloud landing-cloud-a"></div>
-        <div class="friend-landing-cloud landing-cloud-b"></div>
-        <div class="friend-landing-cloud landing-cloud-c"></div>
-        <div class="friend-landing-bear" aria-label="কার্টুন ভালুক">🐻</div>
-        <div class="friend-landing-speech" id="friendPlayTitle"></div>
-      </div>
+            <div id="friendPlayContent"></div>
+      <p id="friendPlayResult"></p>
 
       <div id="friendPlayContent"></div>
       <p id="friendPlayResult"></p>
@@ -2415,7 +2410,15 @@ if (siteFooter) siteFooter.style.display = "none";
   const content = $("friendPlayContent");
   const resultBox = $("friendPlayResult");
 
-    content.innerHTML = `
+      content.innerHTML = `
+  <div class="friend-landing-sky">
+    <div class="friend-landing-cloud landing-cloud-a"></div>
+    <div class="friend-landing-cloud landing-cloud-b"></div>
+    <div class="friend-landing-cloud landing-cloud-c"></div>
+    <div class="friend-landing-bear" aria-label="কার্টুন ভালুক">🐻</div>
+    <div class="friend-landing-speech" id="friendPlayTitle"></div>
+  </div>
+
   <div id="ffSetupStep">
     <label class="ff-label" for="friendPlayerName">
       নিজের নাম লেখো ☺️
@@ -2434,6 +2437,8 @@ if (siteFooter) siteFooter.style.display = "none";
     <p>স্কোর লোড হচ্ছে...</p>
   </section>
 `;
+
+  $("friendPlayTitle").textContent = `তুমি ${quiz.creatorName}-কে কতটা চেনো?`;
 
   show("friendPlayView");
 
@@ -2465,9 +2470,6 @@ if (siteFooter) siteFooter.style.display = "none";
     $("friendStartButton").onclick = async () => {
     const playerName = $("friendPlayerName").value.trim();
     if (!playerName) return alert("আগে নিজের নাম লেখো।");
-
-    const landingAnimation = view.querySelector(".friend-landing-sky");
-    if (landingAnimation) landingAnimation.style.display = "none";
 
     const startButton = $("friendStartButton");
     startButton.disabled = true;
@@ -2738,11 +2740,9 @@ if (siteFooter) siteFooter.style.display = "none";
         </div>
 
         <div style="text-align:center;margin-top:8px">
-       <button type="button" id="friendBackButton" class="back"
-  style="display:block;width:100%;min-height:42px;padding:8px 12px;font-size:16px;line-height:1.2;"
-  ${history.length ? "" : "disabled"}>Back</button>
-  style="min-height:58px; padding:16px 30px; font-size:18px;"
-  ${history.length ? "" : "disabled"}>Back</button>
+           <button type="button" id="friendBackButton" class="back"
+            style="display:block;width:100%;min-height:42px;padding:8px 12px;font-size:16px;line-height:1.2;"
+            ${history.length ? "" : "disabled"}>Back</button>
           <p class="friendship-footer">Made with ✦ for real friendships</p>
         </div>
       </div>
