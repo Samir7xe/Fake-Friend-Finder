@@ -2771,7 +2771,7 @@ if (siteFooter) siteFooter.style.display = "none";
               #friendPlayView .score-number {
                 position: relative;
                 z-index: 2;
-                margin-top: 20px;
+                margin-top: 10px;
                 text-align: center;
                 white-space: nowrap;
                 font-size: clamp(43px, 13vw, 68px);
