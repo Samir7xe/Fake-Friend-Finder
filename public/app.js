@@ -2492,32 +2492,429 @@ if (siteFooter) siteFooter.style.display = "none";
       let currentIndex = 0;
       let submitBusy = false;
 
+      
       async function submitAnswers() {
         if (submitBusy) return;
         submitBusy = true;
+
         try {
           const score = await api(
             `/api/friend-quiz-sessions/${encodeURIComponent(game.sessionId)}/submit`,
             { method: "POST", body: JSON.stringify({ playerName, answers }) }
           );
-          resultBox.textContent = `আমার স্কোর: ${score.score}/${score.total}`;
-                content.innerHTML = `
-            <button type="button" id="friendResultHome"
-              style="display:block;width:100%;min-height:64px;margin:0 0 20px;padding:16px;font-size:22px;font-weight:800;border-radius:14px;">
-              এবার তোমার কুইজ তৈরি করো🐶
-            </button>
-            <p class="friendship-footer">Made with ✦ for real friendships</p>
-            <div class="question-card">
-              <h3>কুইজ সম্পূর্ণ হয়েছে! ♡</h3>
-              <h2>আমার স্কোর: ${score.score}/${score.total}</h2>
-              ${(score.review || []).map((item, i) => `
-                <div style="border:2px solid ${item.isCorrect ? '#16a34a' : '#dc2626'};background:${item.isCorrect ? '#dcfce2' : '#fee2e2'};color:#222;padding:14px;border-radius:12px;margin:12px 0">
-                  <h4>${i + 1}. ${esc(item.question)}</h4>
-                  <p>আপনার উত্তর: ${esc(item.playerAnswer || "উত্তর দেননি")}</p>
-                  <p>সঠিক উত্তর: ${esc(item.correctAnswer)}</p>
-                  <b>${item.isCorrect ? "সঠিক উত্তর ✓" : "ভুল উত্তর ✗"}</b>
+
+          const percentage = score.total > 0
+            ? Math.round((score.score / score.total) * 100)
+            : 0;
+
+          let scoreColor = "#E77EBB";
+
+          if (percentage === 0) {
+            scoreColor = "#F04444";
+          } else if (percentage <= 30) {
+            scoreColor = "#F39A35";
+          } else if (percentage <= 60) {
+            scoreColor = "#E5C52D";
+          } else if (percentage <= 99) {
+            scoreColor = "#E77EBB";
+          } else if (percentage === 100) {
+            scoreColor = "#D6A52B";
+          }
+
+          const celebration = percentage === 100;
+
+          const confetti = celebration
+            ? Array.from({ length: 65 }, (_, i) => `
+                <span class="score-confetti"
+                  style="
+                    --x:${(i * 37) % 100}%;
+                    --delay:${-((i * 13) % 80) / 10}s;
+                    --duration:${5 + (i % 6)}s;
+                    --rotate:${(i * 47) % 360}deg;
+                  ">${["🎉", "🎊", "✨", "🎉", "🎊"][i % 5]}</span>
+              `).join("")
+            : "";
+
+          content.innerHTML = `
+            <style>
+              #friendPlayView .friend-landing-card {
+                min-height: 100dvh;
+                padding: 0 12px 24px;
+                box-sizing: border-box;
+                background: linear-gradient(
+                  180deg,
+                  #91dfff 0%,
+                  #c8edff 48%,
+                  #edf8ff 100%
+                );
+              }
+
+              #friendPlayView .score-result-screen {
+                position: relative;
+                isolation: isolate;
+                min-height: 100dvh;
+                overflow: hidden;
+                padding: 18px 0 30px;
+                box-sizing: border-box;
+              }
+
+              #friendPlayView .score-cloud {
+                position: fixed;
+                z-index: -1;
+                width: 150px;
+                height: 48px;
+                border-radius: 50px;
+                background: #ffffffd9;
+                filter: drop-shadow(0 5px 8px #5c9fc522);
+                pointer-events: none;
+              }
+
+              #friendPlayView .score-cloud::before,
+              #friendPlayView .score-cloud::after {
+                content: "";
+                position: absolute;
+                bottom: 10px;
+                width: 65px;
+                height: 65px;
+                border-radius: 50%;
+                background: inherit;
+              }
+
+              #friendPlayView .score-cloud::before {
+                left: 18px;
+              }
+
+              #friendPlayView .score-cloud::after {
+                right: 15px;
+                width: 48px;
+                height: 48px;
+              }
+
+              #friendPlayView .score-cloud-one {
+                top: 12%;
+                left: -180px;
+                animation: scoreCloudRight 24s linear infinite;
+              }
+
+              #friendPlayView .score-cloud-two {
+                top: 42%;
+                right: -180px;
+                transform: scale(1.2);
+                animation: scoreCloudLeft 30s linear infinite;
+              }
+
+              #friendPlayView .score-cloud-three {
+                top: 72%;
+                left: -180px;
+                transform: scale(.8);
+                animation: scoreCloudRight 32s linear infinite;
+              }
+
+              @keyframes scoreCloudRight {
+                from { left: -180px; }
+                to { left: calc(100% + 180px); }
+              }
+
+              @keyframes scoreCloudLeft {
+                from { right: -180px; }
+                to { right: calc(100% + 180px); }
+              }
+
+              #friendPlayView .score-paper-wrap {
+                position: relative;
+                width: min(82%, 340px);
+                margin: 0 auto 28px;
+                padding-top: 55px;
+              }
+
+              #friendPlayView .score-rope {
+                position: absolute;
+                z-index: 1;
+                top: 0;
+                width: 3px;
+                height: 78px;
+                border-radius: 5px;
+                background: repeating-linear-gradient(
+                  180deg,
+                  #98704d 0 5px,
+                  #d8b58a 5px 9px
+                );
+                transform-origin: top center;
+              }
+
+              #friendPlayView .score-rope::before {
+                content: "";
+                position: absolute;
+                top: 68px;
+                left: -5px;
+                width: 11px;
+                height: 11px;
+                border: 2px solid #98704d;
+                border-radius: 50%;
+                background: #e6c79e;
+              }
+
+              #friendPlayView .score-rope-left {
+                left: 28%;
+                transform: rotate(-5deg);
+              }
+
+              #friendPlayView .score-rope-right {
+                right: 28%;
+                transform: rotate(5deg);
+              }
+
+              #friendPlayView .score-paper {
+                position: relative;
+                z-index: 2;
+                width: 100%;
+                aspect-ratio: 9 / 16;
+                box-sizing: border-box;
+                overflow: hidden;
+                padding: 42px 22px 35px 42px;
+                color: #51483f;
+                background:
+                  repeating-linear-gradient(
+                    to bottom,
+                    transparent 0 31px,
+                    #a9c8e8 32px,
+                    transparent 33px
+                  ),
+                  #fffaf0;
+                border: 1px solid #d7c9b3;
+                filter: drop-shadow(0 8px 10px #456b8b44);
+                clip-path: polygon(
+                  2% 0%, 98% 0%, 99% 20%,
+                  97% 40%, 99% 60%, 97% 80%,
+                  98% 94%, 94% 96%, 90% 94%,
+                  86% 98%, 82% 95%, 78% 98%,
+                  74% 95%, 70% 98%, 66% 95%,
+                  62% 98%, 58% 95%, 54% 98%,
+                  50% 95%, 46% 98%, 42% 95%,
+                  38% 98%, 34% 95%, 30% 98%,
+                  26% 95%, 22% 98%, 18% 95%,
+                  14% 98%, 10% 95%, 6% 98%,
+                  2% 95%, 3% 75%, 1% 55%,
+                  3% 35%
+                );
+              }
+
+              #friendPlayView .score-paper-holes {
+                position: absolute;
+                top: 10%;
+                bottom: 12%;
+                left: 12px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+              }
+
+              #friendPlayView .score-paper-holes span {
+                width: 9px;
+                height: 9px;
+                border-radius: 50%;
+                background: #b9d0df;
+                border: 1px solid #9eb5c6;
+                box-shadow: inset 0 1px 2px #718b9b88;
+              }
+
+              #friendPlayView .score-paper-art {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                color: #d58ab7;
+                font-size: 20px;
+                opacity: .8;
+              }
+
+              #friendPlayView .score-art-one {
+                position: absolute;
+                top: 17%;
+                right: 10%;
+                transform: rotate(15deg);
+              }
+
+              #friendPlayView .score-art-two {
+                position: absolute;
+                bottom: 19%;
+                left: 18%;
+                color: #6eacd4;
+                transform: rotate(-12deg);
+              }
+
+              #friendPlayView .score-art-three {
+                position: absolute;
+                top: 48%;
+                right: 9%;
+                color: #d8ad45;
+                transform: rotate(20deg);
+              }
+
+              #friendPlayView .score-cover {
+                position: relative;
+                z-index: 2;
+                width: fit-content;
+                max-width: 100%;
+                margin: 0 auto 30px;
+                padding: 12px 18px;
+                color: #70465e;
+                background: #f4c7d9;
+                font-size: clamp(17px, 5vw, 23px);
+                font-weight: 900;
+                text-align: center;
+                transform: rotate(-2deg);
+                clip-path: polygon(
+                  3% 0%, 96% 3%, 100% 16%,
+                  97% 85%, 94% 100%, 5% 96%,
+                  0% 82%, 3% 15%
+                );
+                filter: drop-shadow(2px 3px 2px #9d789044);
+              }
+
+              #friendPlayView .score-number {
+                position: relative;
+                z-index: 2;
+                margin-top: 35px;
+                text-align: center;
+                white-space: nowrap;
+                font-size: clamp(43px, 13vw, 68px);
+                line-height: 1.2;
+                font-weight: 1000;
+                letter-spacing: -2px;
+                color: ${scoreColor};
+                text-shadow: 2px 3px 0 #ffffff;
+              }
+
+              #friendPlayView .score-total {
+                color: #5487a7;
+                font-size: .65em;
+                letter-spacing: 0;
+              }
+
+              #friendPlayView .score-crown {
+                display: block;
+                margin-bottom: -22px;
+                font-size: 34px;
+                text-align: center;
+              }
+
+              #friendPlayView .score-percent {
+                position: absolute;
+                right: 12%;
+                bottom: 9%;
+                color: #5487a7;
+                font-size: 16px;
+                font-weight: 900;
+                transform: rotate(-5deg);
+              }
+
+              #friendPlayView .score-confetti {
+                position: fixed;
+                z-index: 20;
+                top: -50px;
+                left: var(--x);
+                font-size: 25px;
+                pointer-events: none;
+                animation: scoreConfettiFall var(--duration) linear var(--delay) infinite;
+              }
+
+              @keyframes scoreConfettiFall {
+                0% {
+                  transform: translate3d(0, -5vh, 0) rotate(0deg);
+                  opacity: 0;
+                }
+                10% { opacity: 1; }
+                50% {
+                  transform: translate3d(35px, 55vh, 0) rotate(180deg);
+                }
+                100% {
+                  transform: translate3d(-25px, 115vh, 0) rotate(360deg);
+                  opacity: 0;
+                }
+              }
+
+              #friendPlayView .score-complete-title {
+                margin: 24px 0 12px;
+                text-align: center;
+                color: #694b83;
+                font-size: 23px;
+                font-weight: 900;
+              }
+
+              #friendPlayView .score-create-button {
+                display: block;
+                width: 100%;
+                min-height: 58px;
+                margin: 0 0 20px;
+                padding: 14px;
+                border: 0;
+                border-radius: 16px;
+                background: linear-gradient(90deg, #913bdb, #e044b6);
+                color: white;
+                font-size: 19px;
+                font-weight: 900;
+              }
+
+              @media (prefers-reduced-motion: reduce) {
+                #friendPlayView .score-cloud,
+                #friendPlayView .score-confetti {
+                  animation: none !important;
+                }
+              }
+            </style>
+
+            <div class="score-result-screen">
+              <div class="score-cloud score-cloud-one"></div>
+              <div class="score-cloud score-cloud-two"></div>
+              <div class="score-cloud score-cloud-three"></div>
+              ${confetti}
+
+              <div class="score-paper-wrap">
+                <div class="score-rope score-rope-left"></div>
+                <div class="score-rope score-rope-right"></div>
+
+                <div class="score-paper">
+                  <div class="score-paper-holes">
+                    ${Array.from({ length: 8 }, () => "<span></span>").join("")}
+                  </div>
+
+                  <div class="score-paper-art">
+                    <span class="score-art-one">✦ ✧ ★</span>
+                    <span class="score-art-two">〰 ✿ 〰</span>
+                    <span class="score-art-three">✧ ★</span>
+                  </div>
+
+                  <div class="score-cover">ツতোমার স্কোর彡</div>
+
+                  ${celebration ? '<div class="score-crown">👑</div>' : ""}
+
+                  <div class="score-number">
+                    ${score.score}<span class="score-total"> / ${score.total}</span>
+                  </div>
+
+                  <div class="score-percent">${percentage}%</div>
                 </div>
-              `).join("")}
+              </div>
+
+              <h3 class="score-complete-title">কুইজ সম্পূর্ণ হয়েছে! ♡</h3>
+
+              <button type="button" id="friendResultHome"
+                class="score-create-button">
+                এবার তোমার কুইজ তৈরি করো🐶
+              </button>
+
+              <p class="friendship-footer">Made with ✦ for real friendships</p>
+
+              <div class="question-card">
+                ${(score.review || []).map((item, i) => `
+                  <div style="border:2px solid ${item.isCorrect ? '#16a34a' : '#dc2626'};background:${item.isCorrect ? '#dcfce2' : '#fee2e2'};color:#222;padding:14px;border-radius:12px;margin:12px 0">
+                    <h4>${i + 1}. ${esc(item.question)}</h4>
+                    <p>আপনার উত্তর: ${esc(item.playerAnswer || "উত্তর দেননি")}</p>
+                    <p>সঠিক উত্তর: ${esc(item.correctAnswer)}</p>
+                    <b>${item.isCorrect ? "সঠিক উত্তর ✓" : "ভুল উত্তর ✗"}</b>
+                  </div>
+                `).join("")}
+              </div>
             </div>
           `;
 
@@ -2539,9 +2936,10 @@ if (siteFooter) siteFooter.style.display = "none";
           }
 
           $("friendResultHome").onclick = async () => {
-  show("websiteMode");
-  await loadWebsiteQuestions();
-};
+            show("websiteMode");
+            await loadWebsiteQuestions();
+          };
+
         } catch (error) {
           alert(fail(error));
           submitBusy = false;
