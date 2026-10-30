@@ -1512,38 +1512,157 @@ async function advance() {
 
           wrap.querySelector(".ff-question-board-card > .ff-title")?.remove();
           area.innerHTML = `
-  <div style="margin-top:30px;text-align:center">
-<h2 style="color:#ff4fd8;font-weight:900">Wah..!👏 তোমার কুইজ তৈরি ☺️</h2>
-<h3 style="color:#00eaff;font-weight:900">☄️ বন্ধুদের পাঠাও আর দেখো কে সত্যিই তোমাকে চেনে 🎀</h3>
-    <div class="ff-share-layout">
-      <div class="ff-share-side">🐻</div>
-      <div class="ff-share-main">
-        <button type="button" class="ff-share" id="ffShare" aria-label="Share">
-          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="18" cy="5" r="3"/>
-            <circle cx="6" cy="12" r="3"/>
-            <circle cx="18" cy="19" r="3"/>
-            <path d="M8.7 10.5 15.3 6.5M8.7 13.5l6.6 4"/>
-          </svg>
-        </button>
-        <div class="ff-share-options">
-          <button type="button" id="ffCopyLink">📋 Copy Link</button>
-          <button type="button" id="ffWhatsApp">🟢 WhatsApp</button>
-          <button type="button" id="ffInstagram">📸 Instagram</button>
-          <button type="button" id="ffFacebook">🔵 Facebook</button>
-          <button type="button" id="ffMessenger">💬 Messenger</button>
-          <button type="button" id="ffTelegram">✈️ Telegram</button>
-        </div>
+          
+<style>
+  .ff-share-main {
+    width: 100%;
+    max-width: 330px;
+    margin: 20px auto;
+    text-align: center;
+  }
 
-        <p style="text-align:center;color:#e0c5ff;font-size:14px;line-height:1.7;margin-top:16px">
-          তোমার বন্ধুদের স্কোর জানতে তোমার পাঠানো লিংকে ক্লিক করে স্কোরবোর্ডে জানতে পারো
-        </p>
+  .ff-share-all {
+    width: 76px !important;
+    height: 76px !important;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+    border: 0;
+    border-radius: 12px;
+    color: white;
+    background: linear-gradient(135deg, #913bdb, #e044b6);
+    box-shadow: 0 5px 16px #913bdb55;
+  }
 
-      </div>
-      <div class="ff-share-side">🐼</div>
+  .ff-share-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 13px;
+    justify-items: center;
+  }
+
+  .ff-share-options button {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 88px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 14px;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 5px 14px #0002;
+    transition: transform .2s, box-shadow .2s;
+  }
+
+  .ff-share-options button:active {
+    transform: scale(.92);
+    box-shadow: 0 0 15px #ffffff99;
+  }
+
+  .ff-share-options svg {
+    width: 35px;
+    height: 35px;
+  }
+
+  #ffCopyLink { background: #526579; }
+  #ffWhatsApp { background: #25D366; }
+  #ffInstagram { background: linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5); }
+  #ffFacebook { background: #1877F2; }
+  #ffMessenger { background: #0084FF; }
+  #ffTelegram { background: #229ED9; }
+
+  .ff-share-cartoons {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 22px auto 10px;
+    font-size: 48px;
+  }
+</style>
+
+<div style="margin-top:30px;text-align:center">
+  <h2 style="color:#ff4fd8;font-weight:900">
+    Wah..!👏 তোমার কুইজ তৈরি ☺️
+  </h2>
+
+  <h3 style="color:#00eaff;font-weight:900">
+    ☄️ বন্ধুদের পাঠাও আর দেখো কে সত্যিই তোমাকে চেনে 🎀
+  </h3>
+
+  <div class="ff-share-main">
+
+    <button type="button" class="ff-share-all" id="ffShare" aria-label="All Share">
+      <svg viewBox="0 0 24 24" width="36" height="36" fill="none"
+        stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="18" cy="5" r="3"/>
+        <circle cx="6" cy="12" r="3"/>
+        <circle cx="18" cy="19" r="3"/>
+        <path d="M8.7 10.5 15.3 6.5M8.7 13.5l6.6 4"/>
+      </svg>
+    </button>
+
+    <div class="ff-share-options">
+
+      <button type="button" id="ffCopyLink" aria-label="Copy Link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="8" y="8" width="12" height="12" rx="2"/>
+          <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>
+        </svg>
+      </button>
+
+      <button type="button" id="ffWhatsApp" aria-label="WhatsApp">
+        <svg viewBox="0 0 24 24" fill="white">
+          <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-5.9c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.8.9-.1.2-.3.2-.5.1-1.4-.7-2.3-1.3-3.2-2.9-.2-.3.2-.3.7-1.2.1-.2 0-.3 0-.5l-.7-1.7c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.8.8-1.1 1.8-.8 2.8.4 1.4 1.4 2.6 2.5 3.6 1.3 1.2 2.8 2 4.4 2.3 1 .2 1.8-.1 2.4-.7.3-.4.5-.9.6-1.4 0-.2-.1-.3-.3-.4z"/>
+        </svg>
+      </button>
+
+      <button type="button" id="ffInstagram" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="5"/>
+          <circle cx="12" cy="12" r="4"/>
+          <circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/>
+        </svg>
+      </button>
+
+      <button type="button" id="ffFacebook" aria-label="Facebook">
+        <svg viewBox="0 0 24 24" fill="white">
+          <path d="M13.5 22v-9h3l.5-3.5h-3.5V7.3c0-1 .3-1.7 1.8-1.7H17V2.5c-.3 0-1.4-.1-2.7-.1-2.7 0-4.5 1.6-4.5 4.6v2.5H7V13h2.8v9z"/>
+        </svg>
+      </button>
+
+      <button type="button" id="ffMessenger" aria-label="Messenger">
+        <svg viewBox="0 0 24 24" fill="white">
+          <path d="M12 2C6.4 2 2 6.1 2 11.2c0 2.9 1.4 5.4 3.7 7.1V22l3.4-1.9c.9.3 1.9.4 2.9.4 5.5 0 10-4.1 10-9.3S17.5 2 12 2zm1 12.5-2.5-2.7-4.8 2.7 5.3-5.6 2.6 2.7 4.7-2.7z"/>
+        </svg>
+      </button>
+
+      <button type="button" id="ffTelegram" aria-label="Telegram">
+        <svg viewBox="0 0 24 24" fill="white">
+          <path d="M21.8 3.2 18.5 20c-.2 1.2-.9 1.5-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.3L6 13.4l-4.9-1.5c-1.1-.3-1.1-1.1.2-1.6L20.4 3c.9-.3 1.7.2 1.4 1.2z"/>
+        </svg>
+      </button>
+
     </div>
+
+    <div class="ff-share-cartoons">
+      <span>🐻</span>
+      <span>🐼</span>
+    </div>
+
+    <p style="text-align:center;color:#e0c5ff;font-size:14px;line-height:1.7">
+      তোমার বন্ধুদের স্কোর জানতে তোমার পাঠানো লিংকে ক্লিক করে স্কোরবোর্ডে জানতে পারো
+    </p>
+
   </div>
-`;
+</div>
           const shareUrl = result.shareUrl;
           const shareTitle = `${name}-এর Friend Quiz`;
           const shareText = "আমার Friend Quiz খেলো!";
